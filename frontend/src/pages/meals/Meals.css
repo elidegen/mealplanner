@@ -1,0 +1,91 @@
+.meals-page {
+  display: flex;
+  flex-direction: column;
+}
+
+nav {
+  padding: var(--medium-gap);
+  display: flex;
+  gap: var(--small-gap);
+}
+
+.listbox {
+  border-radius: var(--border-radius-sm);
+  padding: 8px 16px;
+  background-color: var(--color-lightgrey1);
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--color-text-light);
+  transition: all 200ms;
+
+  &:hover {
+    background-color: var(--color-hover-primary);
+  }
+
+  &.selected {
+    background-color: var(--color-action-button);
+    color: white;
+  }
+}
+
+.list {
+  display: grid;
+  overflow-y: auto;
+  grid-template-columns: repeat(1, 1fr);
+  gap: var(--medium-gap);
+  padding: var(--medium-gap);
+}
+
+.meal {
+  padding: var(--medium-gap);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--border-radius);
+  background: #ffffff;
+  box-shadow: var(--box-shadow);
+  border: none;
+  height: 250px;
+  transition: all 200ms;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow-hover);
+  }
+}
+
+.mealboximg {
+  height: 130px;
+  width: 100%;
+  object-fit: cover;
+  border-radius: var(--border-radius-sm);
+}
+
+.displayFlex {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 10px;
+
+  h2 {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  span {
+    font-size: 13px;
+    color: var(--color-text-light);
+  }
+}
+
+@media (width >= 600px) {
+  .list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (width >= 950px) {
+  .list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

@@ -1,0 +1,11 @@
+ul {
+  padding: var(--medium-gap) 0;
+  flex: 1;
+
+  > li {
+    list-style-type: none;
+    display: flex;
+    align-items: center;
+    gap: var(--small-gap);
+  }
+}

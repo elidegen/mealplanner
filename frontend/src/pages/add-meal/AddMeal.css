@@ -1,0 +1,67 @@
+.add-meal-page {
+  display: flex;
+  justify-content: center;
+  padding: var(--medium-gap);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--medium-gap);
+  width: 100%;
+  max-width: 500px;
+}
+
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ingredient-wrapper {
+  display: flex;
+  gap: var(--small-gap);
+}
+
+.ingredient-wrapper input {
+  flex: 1;
+}
+
+form input {
+  min-height: 30px;
+  padding: 0 var(--small-gap);
+  border-radius: var(--border-radius);
+  border: var(--border-controls);
+  outline: none;
+}
+
+.add-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius);
+  border: var(--border-controls);
+  background-color: var(--color-lightgrey1);
+  cursor: pointer;
+}
+
+.ingredients-list {
+  list-style-type: disc;
+  padding-left: var(--medium-gap);
+}
+
+.default-button {
+  border-radius: var(--border-radius);
+  border: var(--border-controls);
+  padding: var(--small-gap) var(--medium-gap);
+  background-color: var(--color-lightgrey1);
+  box-shadow: var(--box-shadow);
+  cursor: pointer;
+  width: fit-content;
+}
+
+.default-button:hover {
+  background-color: var(--color-hover-primary);
+}
