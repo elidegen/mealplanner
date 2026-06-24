@@ -34,4 +34,7 @@ pnpm-debug.log*
 .vite/
 
 # Project-specific
-batuElijahWebApp.md
+
+backend/.env
+backend/dev.db
+backend/generated/
