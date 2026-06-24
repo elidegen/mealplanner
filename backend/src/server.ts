@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -60,7 +61,10 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
 
   const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "1h" });
 
-  res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
+  res.json({
+    token,
+    user: { id: user.id, email: user.email, name: user.name },
+  });
 });
 
 // Auth-Middleware
@@ -95,21 +99,33 @@ app.post("/api/meals", requireAuth, async (req: AuthRequest, res: Response) => {
   const { title, calories, ingredients } = req.body as {
     title?: string;
     calories?: number;
-    ingredients?: string;
+    ingredients?: { name: string; amount: string }[];
   };
   if (!title || !ingredients) {
-    return res.status(400).json({ error: "title und ingredients sind Pflicht" });
+    return res
+      .status(400)
+      .json({ error: "Title and ingredients are mandatory" });
   }
   const meal = await prisma.meal.create({
-    data: { title, calories, ingredients, userId: req.user!.userId },
+    data: {
+      title,
+      calories,
+      user: { connect: { id: req.user!.userId } },
+      ingredients: { create: ingredients },
+    },
+    include: { ingredients: true },
   });
   res.status(201).json(meal);
 });
 
-app.delete("/api/meals/:id", requireAuth, async (req: AuthRequest, res: Response) => {
-  const id = Number(req.params.id);
-  await prisma.meal.delete({ where: { id, userId: req.user!.userId } });
-  res.status(204).send();
-});
+app.delete(
+  "/api/meals/:id",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    const id = Number(req.params.id);
+    await prisma.meal.delete({ where: { id, userId: req.user!.userId } });
+    res.status(204).send();
+  },
+);
 
 app.listen(PORT, () => console.log(`API auf http://localhost:${PORT}`));

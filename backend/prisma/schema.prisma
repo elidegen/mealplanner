@@ -12,6 +12,7 @@ model User {
   email        String   @unique
   name         String
   passwordHash String
+  role         String   @default("user")
   createdAt    DateTime @default(now())
   meals        Meal[]
 }
@@ -20,8 +21,16 @@ model Meal {
   id          Int      @id @default(autoincrement())
   title       String
   calories    Int?
-  ingredients String
+  ingredients Ingredient[]
   userId      Int
   user        User     @relation(fields: [userId], references: [id])
   createdAt   DateTime @default(now())
+}
+
+model Ingredient {
+  id          Int      @id @default(autoincrement())
+  name        String     
+  amount      String
+  mealId      Int
+  meal        Meal     @relation(fields: [mealId], references: [id])
 }

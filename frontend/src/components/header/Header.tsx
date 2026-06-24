@@ -5,7 +5,6 @@ import { Link, useLocation } from "react-router-dom";
 
 function Header({ title }: { title?: string }) {
   const location = useLocation();
-  console.log("loc", location.pathname);
 
   if (location.pathname === "/login") {
     return null;
@@ -27,7 +26,7 @@ function Header({ title }: { title?: string }) {
       <h1>{titles[location.pathname]}</h1>
       <IconChefHat></IconChefHat>
 
-      <Link className="login-button icon-button" to="/login">
+      <Link className="login-button nav-button" to="/login">
         <IconLogin></IconLogin>
       </Link>
     </header>
