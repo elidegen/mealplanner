@@ -1,10 +1,13 @@
 import "./Header.css";
 import IconChefHat from "../../assets/img/icon_chef_hat.svg?react";
 import IconLogin from "../../assets/img/icon_login.svg?react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
 
 function Header({ title }: { title?: string }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuth();
 
   if (location.pathname === "/login") {
     return null;
@@ -21,14 +24,20 @@ function Header({ title }: { title?: string }) {
     "/users": "Users",
   };
 
+  function handleLogout() {
+    logout();
+    navigate("/login");
+  }
+
   return (
     <header>
       <h1>{titles[location.pathname]}</h1>
-      <IconChefHat></IconChefHat>
-
-      <Link className="login-button nav-button" to="/login">
-        <IconLogin></IconLogin>
-      </Link>
+      <IconChefHat />
+      {isAuthenticated && (
+        <button className="login-button icon-button" onClick={handleLogout}>
+          <IconLogin />
+        </button>
+      )}
     </header>
   );
 }
