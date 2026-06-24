@@ -35,3 +35,6 @@ pnpm-debug.log*
 
 # Project-specific
 batuElijahWebApp.md
+
+# Backend
+backend/dev.db
