@@ -1,0 +1,47 @@
+:root {
+  --small-gap: 10px;
+  --medium-gap: 20px;
+  --big-gap: 30px;
+
+  --color-primary: #00c3ff;
+  --color-secondary: #000000;
+  --color-background: #ecf6ff;
+  --color-action-button: #1a6fd4;
+  --color-alert: #e74c3c;
+  --color-success: #2ecc71;
+  --color-selected: #1559b0;
+  --color-lightgrey1: #c8dff7;
+  --color-lightgrey2: #a8c8ee;
+
+  --color-hover-primary: #bee0ff;
+  --color-text: #0a1f3d;
+  --color-text-light: #3a6090;
+
+  --border-radius: 12px;
+  --border-radius-sm: 8px;
+
+  --box-shadow: 0 2px 12px rgba(26, 111, 212, 0.12);
+  --box-shadow-hover: 0 6px 20px rgba(26, 111, 212, 0.25);
+
+  --border-controls: 1px solid #a8c8ee;
+
+  --header-height: 70px;
+  --footer-height: 70px;
+  --form-control-height: 44px;
+}
+
+* {
+  font-family: "roboto";
+  color: var(--color-text);
+  margin: 0;
+  box-sizing: border-box;
+}
+
+@font-face {
+  font-family: roboto;
+  src: url(/src/assets/fonts/Roboto/Roboto-Medium.ttf);
+}
+
+body {
+  background-color: var(--color-background);
+}

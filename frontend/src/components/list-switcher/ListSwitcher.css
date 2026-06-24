@@ -1,0 +1,6 @@
+.list-switcher-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--medium-gap);
+}

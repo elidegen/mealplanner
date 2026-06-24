@@ -1,0 +1,36 @@
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: var(--footer-height);
+  background-color: var(--color-primary);
+  box-shadow: 0 -2px 12px rgba(26, 111, 212, 0.3);
+  z-index: 10;
+}
+
+footer svg {
+  height: 26px;
+  width: 26px;
+  fill: rgb(0, 0, 0);
+  transition: fill 200ms;
+}
+
+footer .icon-button:hover svg {
+  fill: white;
+}
+
+.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border-radius: var(--border-radius-sm);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}

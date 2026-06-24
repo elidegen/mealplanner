@@ -1,0 +1,58 @@
+.users-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.users-overview {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--medium-gap);
+  gap: var(--medium-gap);
+  border-bottom: 1px solid var(--color-lightgrey2);
+}
+
+.user-box:hover {
+  background-color: var(--color-hover-primary);
+  filter: brightness(0.95);
+}
+
+.user-name {
+  flex: 1;
+  font-weight: normal;
+}
+
+.user-img {
+  height: 60px;
+  width: 60px;
+  object-fit: cover;
+  border-radius: var(--border-radius);
+}
+
+.button-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.add-user-button {
+  background-color: var(--color-action-button);
+  margin: var(--big-gap);
+  padding: var(--small-gap) var(--medium-gap);
+}
+
+.add-user-button span {
+  font-size: 24px;
+  margin-right: var(--small-gap);
+  color: white;
+}
+
+.add-user-button svg {
+  fill: white;
+}

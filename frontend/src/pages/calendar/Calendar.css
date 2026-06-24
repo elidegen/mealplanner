@@ -1,0 +1,34 @@
+.calendar-page {
+  display: flex;
+  flex-direction: column;
+  padding: var(--medium-gap);
+  gap: var(--medium-gap);
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  gap: var(--small-gap);
+}
+
+.listbox {
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  border: var(--border-controls);
+  padding: 5px 10px;
+  background-color: var(--color-lightgrey1);
+  cursor: pointer;
+}
+
+.listbox.selected {
+  background-color: var(--color-selected);
+}
+
+.calendar-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.calendar-wrapper input {
+  padding: 5px 10px;
+}

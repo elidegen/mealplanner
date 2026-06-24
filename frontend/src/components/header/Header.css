@@ -1,0 +1,36 @@
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  height: var(--header-height);
+  background-color: var(--color-primary);
+  align-items: center;
+  justify-content: center;
+  gap: var(--small-gap);
+  box-shadow: 0 2px 12px rgba(26, 111, 212, 0.3);
+  z-index: 10;
+}
+
+header svg {
+  height: 28px;
+  width: 28px;
+  fill: rgb(0, 0, 0);
+}
+
+h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgb(0, 0, 0);
+}
+
+.login-button {
+  position: absolute;
+  top: 50%;
+  right: var(--medium-gap);
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

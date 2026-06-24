@@ -1,0 +1,29 @@
+.add-item-wrapper {
+  position: fixed;
+  bottom: var(--footer-height);
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: 3fr 2fr 1fr;
+  gap: var(--small-gap);
+  padding: var(--small-gap) var(--medium-gap);
+  background-color: #c8dff7;
+  box-shadow: 0 -2px 12px rgba(26, 111, 212, 0.15);
+  z-index: 9;
+
+  input {
+    height: 40px;
+    border-radius: var(--border-radius-sm);
+    border: 1.5px solid var(--color-lightgrey2);
+    outline: none;
+    padding: 8px 12px;
+    width: 100%;
+    font-size: 14px;
+    background-color: white;
+    transition: border-color 200ms;
+
+    &:focus {
+      border-color: var(--color-primary);
+    }
+  }
+}
