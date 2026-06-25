@@ -38,6 +38,7 @@ nav {
 }
 
 .meal {
+  position: relative;
   padding: var(--medium-gap);
   display: flex;
   flex-direction: column;
@@ -88,4 +89,10 @@ nav {
   .list {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+
+.delete-button {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
 }

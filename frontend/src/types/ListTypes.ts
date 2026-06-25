@@ -1,3 +1,5 @@
+import type { IIngredient } from "../pages/add-meal/MealTypes";
+
 export interface IListItem {
   id: string;
   name: string;
@@ -13,8 +15,10 @@ export interface SettingsItem {
 }
 
 export interface IMeal {
+  id: number;
   title: string;
-  ingredients: string[];
+  ingredients: IIngredient[];
+  calories?: number;
   image?: string;
 }
 

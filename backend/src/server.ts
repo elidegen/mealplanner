@@ -91,6 +91,7 @@ function requireAuth(req: AuthRequest, res: Response, next: Function) {
 app.get("/api/meals", requireAuth, async (req: AuthRequest, res: Response) => {
   const meals = await prisma.meal.findMany({
     where: { userId: req.user!.userId },
+    include: { ingredients: true },
   });
   res.json(meals);
 });
