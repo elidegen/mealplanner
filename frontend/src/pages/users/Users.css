@@ -45,14 +45,15 @@
   background-color: var(--color-action-button);
   margin: var(--big-gap);
   padding: var(--small-gap) var(--medium-gap);
-}
+  display: flex;
+  align-items: center;
+  gap: var(--small-gap);
 
-.add-user-button span {
-  font-size: 24px;
-  margin-right: var(--small-gap);
-  color: white;
-}
+  span {
+    color: white;
+  }
 
-.add-user-button svg {
-  fill: white;
+  svg {
+    fill: white;
+  }
 }

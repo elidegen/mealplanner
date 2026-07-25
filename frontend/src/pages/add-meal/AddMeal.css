@@ -20,7 +20,20 @@ form {
 
 .ingredient-wrapper {
   display: flex;
-  gap: var(--small-gap);
+  border-collapse: collapse;
+
+  input#amount {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left-width: 0;
+    margin-right: var(--small-gap);
+    width: 100px;
+  }
+
+  input#ingredients {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
 }
 
 .ingredient-wrapper input {
@@ -35,21 +48,14 @@ form input {
   outline: none;
 }
 
-.add-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--border-radius);
-  border: var(--border-controls);
-  background-color: var(--color-lightgrey1);
-  cursor: pointer;
-}
-
 .ingredients-list {
   list-style-type: disc;
   padding-left: var(--medium-gap);
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
 }
 
 .default-button {

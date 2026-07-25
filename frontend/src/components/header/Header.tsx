@@ -34,7 +34,7 @@ function Header({ title }: { title?: string }) {
       <h1>{titles[location.pathname]}</h1>
       <IconChefHat />
       {isAuthenticated && (
-        <button className="login-button icon-button" onClick={handleLogout}>
+        <button className="login-button nav-button" onClick={handleLogout}>
           <IconLogin />
         </button>
       )}

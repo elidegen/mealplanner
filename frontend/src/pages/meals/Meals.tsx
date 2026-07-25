@@ -1,61 +1,184 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { IMeal } from "../../types/ListTypes";
 import "./Meals.css";
+import { useAuth } from "../../auth/AuthContext";
+import { apiFetch } from "../../auth/api";
+import LoadingSpinner from "../../components/loading-spinner/LoadingSpinner";
+import Snackbar from "../../components/snackbar/Snackbar";
+import IconTrash from "../../assets/img/icon_trash.svg?react";
+import IconListAdd from "../../assets/img/icon_list_add.svg?react";
 
 type Tab = "Recipes" | "MealBrowser";
 
-const RECIPES: IMeal[] = [
-  { title: "Lachsfilet", ingredients: ["200g Lachs", "2 EL Butter", "Salz", "Pfeffer", "Zitrone"] },
-  { title: "Rice Porridge", ingredients: ["200g Reis", "500ml Wasser", "Salz", "Ingwer"] },
-  { title: "Döner", ingredients: ["Fladenbrot", "Hähnchenfleisch", "Salat", "Tomate", "Soße"] },
-  { title: "Hähnchen mit Gemüse", ingredients: ["400g Hähnchen", "Brokkoli", "Karotten", "Knoblauch"] },
-];
+const RECIPES: IMeal[] = [];
 
-const MEAL_BROWSER: IMeal[] = [
-  { title: "Lasagne", ingredients: ["Lasagneplatten", "Hackfleisch", "Tomatensauce", "Béchamel", "Käse"] },
-  { title: "Pizza Quattro Formaggi", ingredients: ["Pizzateig", "Mozzarella", "Gorgonzola", "Parmesan", "Ricotta"] },
-  { title: "Reis mit Hähnchen", ingredients: ["300g Reis", "400g Hähnchen", "Zwiebeln", "Paprika"] },
-  { title: "Nudeln mit Pesto", ingredients: ["400g Nudeln", "Basilikum-Pesto", "Parmesan", "Kirschtomaten"] },
-  { title: "Griechischer Salat", ingredients: ["Gurke", "Tomate", "Feta", "Oliven", "Olivenöl"] },
-  { title: "Rührei", ingredients: ["4 Eier", "Butter", "Salz", "Schnittlauch"] },
-];
+const MEAL_BROWSER: IMeal[] = [];
+
+export interface IMealResponse {
+  id: number;
+  title: string;
+  calories: number | null;
+  ingredients: { id: number; name: string; amount: string }[];
+}
 
 function Meals() {
+  const { token } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("Recipes");
-  const list = activeTab === "Recipes" ? RECIPES : MEAL_BROWSER;
+  const [meals, setMeals] = useState<IMeal[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState<{
+    id: number;
+    text: string;
+    color: string;
+  } | null>(null);
+  const snackbarId = useRef(0);
+
+  const list =
+    meals.length > 0 ? meals : activeTab === "Recipes" ? RECIPES : MEAL_BROWSER;
+
+  useEffect(() => {
+    async function loadMeals() {
+      setLoading(true);
+      try {
+        const data = await apiFetch<IMeal[]>("/api/meals", {
+          method: "GET",
+          token,
+        });
+        setMeals(data);
+      } catch (err) {
+        console.log("fehler", err);
+
+        const message =
+          err instanceof Error ? err.message : "Error while loading meals";
+        setSnackbar({
+          id: ++snackbarId.current,
+          text: message,
+          color: "#dc2626",
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadMeals();
+  }, [token]);
+
+  async function deleteMeal(meal: IMeal) {
+    setLoading(true);
+    try {
+      await apiFetch<void>(`/api/meals/${meal.id}`, {
+        method: "DELETE",
+        token,
+      });
+      setMeals((prev) => prev.filter((m) => m.id !== meal.id));
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: "Meal deleted",
+        color: "#16a34a",
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Deleting meal failed";
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: message,
+        color: "#dc2626",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function addToList(meal: IMeal) {
+    console.log("addtolist");
+
+    // setLoading(true);
+    // try {
+    //   await apiFetch<void>(`/api/meals/${meal.id}`, {
+    //     method: "DELETE",
+    //     token,
+    //   });
+    //   setMeals((prev) => prev.filter((m) => m.id !== meal.id));
+    //   setSnackbar({
+    //     id: ++snackbarId.current,
+    //     text: "Meal deleted",
+    //     color: "#16a34a",
+    //   });
+    // } catch (err) {
+    //   const message =
+    //     err instanceof Error ? err.message : "Deleting meal failed";
+    //   setSnackbar({
+    //     id: ++snackbarId.current,
+    //     text: message,
+    //     color: "#dc2626",
+    //   });
+    // } finally {
+    //   setLoading(false);
+    // }
+  }
 
   return (
-    <div className="meals-page">
-      <nav>
-        <button
-          className={`listbox ${activeTab === "Recipes" ? "selected" : ""}`}
-          onClick={() => setActiveTab("Recipes")}
-        >
-          <span>Recipes</span>
-        </button>
-        <button
-          className={`listbox ${activeTab === "MealBrowser" ? "selected" : ""}`}
-          onClick={() => setActiveTab("MealBrowser")}
-        >
-          <span>Meal Browser</span>
-        </button>
-      </nav>
-      <div className="list">
-        {list.map((meal) => (
-          <div key={meal.title} className="meal">
-            {meal.image && (
-              <img src={meal.image} className="mealboximg" alt={meal.title} />
-            )}
-            <div className="displayFlex">
-              <h2>{meal.title}</h2>
-              {meal.ingredients.map((ing) => (
-                <span key={ing}>-{ing}</span>
-              ))}
+    <>
+      <div className="meals-page">
+        <nav>
+          <button
+            className={`listbox ${activeTab === "Recipes" ? "selected" : ""}`}
+            onClick={() => setActiveTab("Recipes")}
+          >
+            <span>Recipes</span>
+          </button>
+          <button
+            className={`listbox ${activeTab === "MealBrowser" ? "selected" : ""}`}
+            onClick={() => setActiveTab("MealBrowser")}
+          >
+            <span>Meal Browser</span>
+          </button>
+        </nav>
+        <div className="list">
+          {list.map((meal) => (
+            <div key={meal.title} className="meal">
+              {meal.image && (
+                <img src={meal.image} className="mealboximg" alt={meal.title} />
+              )}
+              <div className="displayFlex">
+                <h2>{meal.title}</h2>
+                {meal.calories && <div>Calories: {meal.calories}</div>}
+                {meal.ingredients.map((ing) => (
+                  <span key={ing.name}>
+                    - {ing.name} {ing.amount}
+                  </span>
+                ))}
+              </div>
+              <div className="button-wrapper">
+                <button
+                  className="nav-button"
+                  type="button"
+                  onClick={() => addToList(meal)}
+                >
+                  <IconListAdd />
+                </button>
+
+                <button
+                  className="nav-button"
+                  type="button"
+                  onClick={() => deleteMeal(meal)}
+                >
+                  <IconTrash />
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+      <LoadingSpinner visible={loading} />
+      {snackbar && (
+        <Snackbar
+          key={snackbar.id}
+          text={snackbar.text}
+          color={snackbar.color}
+          duration={3000}
+        />
+      )}
+    </>
   );
 }
 

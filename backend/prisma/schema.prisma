@@ -12,16 +12,24 @@ model User {
   email        String   @unique
   name         String
   passwordHash String
-  createdAt    DateTime @default(now())
+  rights       Rights
+  homeIds      String[]
   meals        Meal[]
 }
 
-model Meal {
+model Meal {  --ingredient
   id          Int      @id @default(autoincrement())
-  title       String
-  calories    Int?
-  ingredients String
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  createdAt   DateTime @default(now())
+  name        String
+  makros      Makros
+  ingredients Ingredient[]
+  tags        String[]
+  amount      String
+}
+
+model Ingredient {
+  id          Int      @id @default(autoincrement())
+  name        String     
+  amount      String
+  mealId      Int
+  meal        Meal     @relation(fields: [mealId], references: [id], onDelete: Cascade)
 }

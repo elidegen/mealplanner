@@ -20,8 +20,8 @@ function App() {
         <main>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/home" element={<Home />} />
             <Route element={<ProtectedRoute />}>
+              <Route path="/home" element={<Home />} />
               <Route path="/" element={<AddMeal />} />
               <Route path="/add-meal" element={<AddMeal />} />
               <Route path="/lists" element={<Lists />} />

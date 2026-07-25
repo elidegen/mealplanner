@@ -19,11 +19,11 @@ footer svg {
   transition: fill 200ms;
 }
 
-footer .icon-button:hover svg {
+footer .nav-button:hover svg {
   fill: white;
 }
 
-.icon-button {
+.nav-button {
   display: flex;
   align-items: center;
   justify-content: center;
