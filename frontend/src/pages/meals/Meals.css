@@ -46,8 +46,11 @@ nav {
   background: #ffffff;
   box-shadow: var(--box-shadow);
   border: none;
-  height: 250px;
   transition: all 200ms;
+
+  .displayFlex {
+    padding: 0;
+  }
 
   &:hover {
     transform: translateY(-2px);
@@ -91,8 +94,15 @@ nav {
   }
 }
 
-.delete-button {
+.button-wrapper {
   position: absolute;
   right: 10px;
   bottom: 10px;
+
+  button {
+    margin-left: -10px;
+    &:hover {
+      background-color: lightgrey;
+    }
+  }
 }

@@ -6,6 +6,7 @@ import { apiFetch } from "../../auth/api";
 import LoadingSpinner from "../../components/loading-spinner/LoadingSpinner";
 import Snackbar from "../../components/snackbar/Snackbar";
 import IconTrash from "../../assets/img/icon_trash.svg?react";
+import IconListAdd from "../../assets/img/icon_list_add.svg?react";
 
 type Tab = "Recipes" | "MealBrowser";
 
@@ -87,6 +88,34 @@ function Meals() {
     }
   }
 
+  async function addToList(meal: IMeal) {
+    console.log("addtolist");
+
+    // setLoading(true);
+    // try {
+    //   await apiFetch<void>(`/api/meals/${meal.id}`, {
+    //     method: "DELETE",
+    //     token,
+    //   });
+    //   setMeals((prev) => prev.filter((m) => m.id !== meal.id));
+    //   setSnackbar({
+    //     id: ++snackbarId.current,
+    //     text: "Meal deleted",
+    //     color: "#16a34a",
+    //   });
+    // } catch (err) {
+    //   const message =
+    //     err instanceof Error ? err.message : "Deleting meal failed";
+    //   setSnackbar({
+    //     id: ++snackbarId.current,
+    //     text: message,
+    //     color: "#dc2626",
+    //   });
+    // } finally {
+    //   setLoading(false);
+    // }
+  }
+
   return (
     <>
       <div className="meals-page">
@@ -119,13 +148,23 @@ function Meals() {
                   </span>
                 ))}
               </div>
-              <button
-                className="nav-button delete-button"
-                type="button"
-                onClick={() => deleteMeal(meal)}
-              >
-                <IconTrash />
-              </button>
+              <div className="button-wrapper">
+                <button
+                  className="nav-button"
+                  type="button"
+                  onClick={() => addToList(meal)}
+                >
+                  <IconListAdd />
+                </button>
+
+                <button
+                  className="nav-button"
+                  type="button"
+                  onClick={() => deleteMeal(meal)}
+                >
+                  <IconTrash />
+                </button>
+              </div>
             </div>
           ))}
         </div>

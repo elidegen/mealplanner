@@ -21,8 +21,8 @@ function Users() {
       prev.map((user) =>
         user.id === id
           ? { ...user, rights: user.rights === "Admin" ? "User" : "Admin" }
-          : user
-      )
+          : user,
+      ),
     );
   }
 
@@ -43,17 +43,14 @@ function Users() {
             >
               {user.rights === "Admin" ? <IconArrowDown /> : <IconArrowUp />}
             </button>
-            <button
-              className="icon-button"
-              onClick={() => deleteUser(user.id)}
-            >
+            <button className="icon-button" onClick={() => deleteUser(user.id)}>
               <IconTrash />
             </button>
           </div>
         ))}
       </div>
       <div className="button-wrapper">
-        <button className="icon-button add-user-button">
+        <button className="default-button add-user-button">
           <span>Add a user</span>
           <IconAdd />
         </button>
