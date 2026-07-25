@@ -12,19 +12,18 @@ model User {
   email        String   @unique
   name         String
   passwordHash String
-  role         String   @default("user")
-  createdAt    DateTime @default(now())
+  rights       Rights
+  homeIds      String[]
   meals        Meal[]
 }
 
-model Meal {
+model Meal {  --ingredient
   id          Int      @id @default(autoincrement())
-  title       String
-  calories    Int?
+  name        String
+  makros      Makros
   ingredients Ingredient[]
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  createdAt   DateTime @default(now())
+  tags        String[]
+  amount      String
 }
 
 model Ingredient {
