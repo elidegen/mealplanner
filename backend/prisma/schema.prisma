@@ -7,29 +7,79 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
-  name         String
-  passwordHash String
-  rights       Rights
-  homeIds      String[]
-  meals        Meal[]
+model Home {
+  id          Int              @id @default(autoincrement())
+  name        String
+  password    String
+  users       HomeMembership[]
+  meals       Meal[]
+  listEntrys  ListEntry[]
+  tags        Tag[]
+  ingredients Ingredient[]
 }
 
-model Meal {  --ingredient
-  id          Int      @id @default(autoincrement())
-  name        String
-  makros      Makros
-  ingredients Ingredient[]
-  tags        String[]
-  amount      String
+model HomeMembership {
+  id     Int    @id @default(autoincrement())
+  homeId Int
+  userId Int
+  role   String
+  home   Home   @relation(fields: [homeId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id           Int              @id @default(autoincrement())
+  email        String           @unique
+  name         String
+  passwordHash String
+  homes        HomeMembership[]
+}
+
+model Meal {
+  id           Int          @id @default(autoincrement())
+  name         String
+  macroId      Int
+  macro        Macro?       @relation(fields: [macroId], references: [id])
+  ingredients  Ingredient[]
+  tags         Tag[]
+  portions     Int
+  instructions String?
+  home         Home?        @relation(fields: [homeId], references: [id])
+  homeId       Int?
+  public       Boolean
 }
 
 model Ingredient {
-  id          Int      @id @default(autoincrement())
-  name        String     
-  amount      String
-  mealId      Int
-  meal        Meal     @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  id     Int    @id @default(autoincrement())
+  name   String
+  amount String
+  homeId Int
+  mealId Int
+  home   Home   @relation(fields: [homeId], references: [id])
+  meal   Meal   @relation(fields: [mealId], references: [id], onDelete: Cascade)
+}
+
+model Macro {
+  id       Int    @id @default(autoincrement())
+  calories Int?
+  carbs    Int?
+  proteins Int?
+  fat      Int?
+  meals    Meal[]
+}
+
+model Tag {
+  name   String @id @unique
+  homeId Int
+  home   Home   @relation(fields: [homeId], references: [id])
+  meals  Meal[]
+}
+
+model ListEntry {
+  id     Int    @id @default(autoincrement())
+  name   String
+  amount String
+  homeId Int
+  home   Home   @relation(fields: [homeId], references: [id])
+  list   String
 }
