@@ -5,6 +5,7 @@ import { useAuth } from "../../auth/AuthContext";
 import "./Login.css";
 
 function Login() {
+  const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -32,11 +33,11 @@ function Login() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name: email, password }),
+        body: JSON.stringify({ email, name, password }),
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error);
+        setError(data.error);
       }
       await login(email, password);
       navigate("/meals");
@@ -51,6 +52,12 @@ function Login() {
     <div className="login-wrapper">
       <h1>Login</h1>
       <div className="login-form">
+        <input
+          type="text"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
         <input
           type="email"
           placeholder="E-Mail"
