@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Home {
-  id          Int              @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   name        String
   password    String
   users       HomeMembership[]
@@ -19,17 +19,18 @@ model Home {
 }
 
 model HomeMembership {
-  id     Int    @id @default(autoincrement())
-  homeId Int
-  userId Int
-  role   String
-  home   Home   @relation(fields: [homeId], references: [id])
-  user   User   @relation(fields: [userId], references: [id])
+  id          Int           @id @default(autoincrement())
+  homeId      Int
+  userId      Int
+  role        String
+  lastLogin   DateTime
+  home        Home          @relation(fields: [homeId], references: [id])
+  user        User          @relation(fields: [userId], references: [id])
 }
 
 model User {
-  id           Int              @id @default(autoincrement())
-  email        String           @unique
+  id           Int          @id @default(autoincrement())
+  email        String       @unique
   name         String
   passwordHash String
   homes        HomeMembership[]
@@ -38,8 +39,8 @@ model User {
 model Meal {
   id           Int          @id @default(autoincrement())
   name         String
-  macroId      Int
-  macro        Macro?       @relation(fields: [macroId], references: [id])
+  macroId      Int?
+  macros       Macros?       @relation(fields: [macroId], references: [id])
   ingredients  Ingredient[]
   tags         Tag[]
   portions     Int
@@ -50,17 +51,17 @@ model Meal {
 }
 
 model Ingredient {
-  id     Int    @id @default(autoincrement())
+  id     Int                @id @default(autoincrement())
   name   String
   amount String
   homeId Int
   mealId Int
-  home   Home   @relation(fields: [homeId], references: [id])
-  meal   Meal   @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  home   Home               @relation(fields: [homeId], references: [id])
+  meal   Meal               @relation(fields: [mealId], references: [id], onDelete: Cascade)
 }
 
-model Macro {
-  id       Int    @id @default(autoincrement())
+model Macros {
+  id       Int              @id @default(autoincrement())
   calories Int?
   carbs    Int?
   proteins Int?
@@ -69,17 +70,19 @@ model Macro {
 }
 
 model Tag {
-  name   String @id @unique
+  id     Int                @id @default(autoincrement())
+  name   String            
   homeId Int
-  home   Home   @relation(fields: [homeId], references: [id])
+  home   Home               @relation(fields: [homeId], references: [id])
   meals  Meal[]
+  @@unique([name, homeId])       
 }
 
 model ListEntry {
-  id     Int    @id @default(autoincrement())
+  id     Int                @id @default(autoincrement())
   name   String
   amount String
   homeId Int
-  home   Home   @relation(fields: [homeId], references: [id])
+  home   Home               @relation(fields: [homeId], references: [id])
   list   String
 }

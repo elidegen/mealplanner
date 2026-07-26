@@ -6,11 +6,13 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { IMacros } from "./types";
 
 const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET!;
+const currentHomeId: number = 0;
 
 app.use(helmet());
 app.use(express.json());
@@ -59,7 +61,13 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
     return res.status(401).json({ error: "Ungültige Zugangsdaten" });
   }
 
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "1h" });
+  const token = jwt.sign(
+    { userId: user.id, homeId: currentHomeId },
+    JWT_SECRET,
+    {
+      expiresIn: "1h",
+    },
+  );
 
   res.json({
     token,
@@ -68,10 +76,10 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
 });
 
 // Auth-Middleware
-type JwtPayload = { userId: number };
+type JwtPayload = { userId: number; homeId: number };
 
 interface AuthRequest extends Request {
-  user?: JwtPayload;
+  authData?: JwtPayload;
 }
 
 function requireAuth(req: AuthRequest, res: Response, next: Function) {
@@ -80,7 +88,7 @@ function requireAuth(req: AuthRequest, res: Response, next: Function) {
     return res.status(401).json({ error: "Nicht authentifiziert" });
   }
   try {
-    req.user = jwt.verify(header.slice(7), JWT_SECRET) as JwtPayload;
+    req.authData = jwt.verify(header.slice(7), JWT_SECRET) as JwtPayload;
     next();
   } catch {
     res.status(401).json({ error: "Token ungültig oder abgelaufen" });
@@ -90,33 +98,54 @@ function requireAuth(req: AuthRequest, res: Response, next: Function) {
 // Meal-Routen
 app.get("/api/meals", requireAuth, async (req: AuthRequest, res: Response) => {
   const meals = await prisma.meal.findMany({
-    where: { userId: req.user!.userId },
     include: { ingredients: true },
   });
   res.json(meals);
 });
 
 app.post("/api/meals", requireAuth, async (req: AuthRequest, res: Response) => {
-  const { title, calories, ingredients } = req.body as {
-    title?: string;
-    calories?: number;
-    ingredients?: { name: string; amount: string }[];
-  };
-  if (!title || !ingredients) {
+  const { name, macros, ingredients, tags, instructions, portions } =
+    req.body as {
+      name?: string;
+      ingredients?: { name: string; amount: string }[];
+      tags?: { name: string }[];
+      macros?: IMacros;
+      instructions?: string;
+      portions: number;
+    };
+  if (!name || !ingredients) {
     return res
       .status(400)
-      .json({ error: "Title and ingredients are mandatory" });
+      .json({ error: "Name and ingredients are mandatory" });
   }
-  const meal = await prisma.meal.create({
-    data: {
-      title,
-      calories,
-      user: { connect: { id: req.user!.userId } },
-      ingredients: { create: ingredients },
-    },
-    include: { ingredients: true },
-  });
-  res.status(201).json(meal);
+  try {
+    const meal = await prisma.meal.create({
+      data: {
+        name,
+        macros: { create: macros },
+        ingredients: {
+          create: ingredients.map((ingredient) => ({
+            ...ingredient,
+            homeId: currentHomeId,
+          })),
+        },
+        tags: {
+          connectOrCreate: tags?.map((tag) => ({
+            where: { name_homeId: { name: tag.name, homeId: currentHomeId } },
+            create: { name: tag.name, homeId: currentHomeId },
+          })),
+        },
+        instructions,
+        portions,
+        home: { connect: { id: currentHomeId } },
+        public: false,
+      },
+    });
+    res.status(201).json(meal);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unbekannter Fehler";
+    res.status(400).json({ error: message });
+  }
 });
 
 app.delete(
@@ -124,7 +153,7 @@ app.delete(
   requireAuth,
   async (req: AuthRequest, res: Response) => {
     const id = Number(req.params.id);
-    await prisma.meal.delete({ where: { id, userId: req.user!.userId } });
+    await prisma.meal.delete({ where: { id } });
     res.status(204).send();
   },
 );
