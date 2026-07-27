@@ -11,6 +11,7 @@ import Users from "./pages/users/Users";
 import Home from "./pages/home/Home";
 import Meals from "./pages/meals/Meals";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
+import Register from "./pages/register/register";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <main>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/home" element={<Home />} />
               <Route path="/" element={<AddMeal />} />

@@ -9,7 +9,7 @@ function Header({ title }: { title?: string }) {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
 
-  if (location.pathname === "/login") {
+  if (location.pathname === "/login" || location.pathname === "/register") {
     return null;
   }
 
