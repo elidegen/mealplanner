@@ -12,12 +12,12 @@ function FirstHome() {
   const { createHome, joinHome } = useHome();
 
   async function handleCreate() {
-    if (name.trim() === "") { setError("Bitte gib einen Namen ein"); return; }
+    if (name.trim() === "") { setError("Please enter a name"); return; }
     setLoading(true);
     try {
       await createHome(name);
     } catch {
-      setError("Home erstellen fehlgeschlagen");
+      setError("Could not create home");
     } finally {
       setLoading(false);
     }
@@ -25,14 +25,14 @@ function FirstHome() {
 
   async function handleJoin() {
     if (joinCode.trim() === "") {
-      setError("Bitte gib einen Einladungscode ein");
+      setError("Please enter an invite code");
       return;
     }
     setLoading(true);
     try {
       await joinHome(joinCode.trim());
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Beitreten fehlgeschlagen");
+      setError(e instanceof Error ? e.message : "Could not join home");
     } finally {
       setLoading(false);
     }
@@ -40,26 +40,26 @@ function FirstHome() {
 
   return (
     <div className="login-wrapper">
-      <h1>{mode === "create" ? "Home erstellen" : "Home beitreten"}</h1>
+      <h1>{mode === "create" ? "Create home" : "Join home"}</h1>
       <div className="login-form">
         {mode === "create" ? (
           <input
             type="text"
-            placeholder="Name des Homes (z.B. WG Konstanz)"
+            placeholder="Home name (e.g. Flat Konstanz)"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
         ) : (
           <input
             type="text"
-            placeholder="Einladungscode"
+            placeholder="Invite code"
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
           />
         )}
         {error && <p className="error">{error}</p>}
         <TextButton
-          text={mode === "create" ? "Erstellen" : "Beitreten"}
+          text={mode === "create" ? "Create" : "Join"}
           onClicked={mode === "create" ? handleCreate : handleJoin}
           disabled={loading}
         />
@@ -67,7 +67,7 @@ function FirstHome() {
           className="link-button"
           onClick={() => { setMode(mode === "create" ? "join" : "create"); setError(null); }}
         >
-          {mode === "create" ? "Einladungscode? Beitreten" : "Neues Home erstellen"}
+          {mode === "create" ? "Have an invite code? Join" : "Create a new home"}
         </button>
       </div>
     </div>

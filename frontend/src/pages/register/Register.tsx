@@ -16,15 +16,15 @@ function Register() {
   async function handleRegister() {
     setError(null);
     if (name.trim() === "") {
-        setError("Bitte gib deinen Namen ein");
+        setError("Please enter your name");
     return;
     }
     if (!email.includes("@") || !email.includes(".")) {
-        setError("Bitte gib eine gültige E-Mail-Adresse ein");
+        setError("Please enter a valid email address");
     return;
     }
     if (password.length < 8) {
-        setError("Das Passwort muss mindestens 8 Zeichen lang sein");
+        setError("Password must be at least 8 characters");
     return;
     }
     setLoading(true);
@@ -42,7 +42,7 @@ function Register() {
       await login(email, password);
       navigate("/meals");
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Registrierung fehlgeschlagen");
+      setError(e instanceof Error ? e.message : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ function Register() {
 
   return (
     <div className="login-wrapper">
-      <h1>Registrieren</h1>
+      <h1>Sign up</h1>
       <div className="login-form">
         <input
           type="text"
@@ -66,18 +66,18 @@ function Register() {
         />
         <input
           type="password"
-          placeholder="Passwort"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
         {error && <p className="error">{error}</p>}
-        {loading && <p>Lädt...</p>}
+        {loading && <p>Loading…</p>}
         <TextButton
-          text="Registrieren"
+          text="Sign up"
           onClicked={handleRegister}
           disabled={name === "" || email === "" || password === "" || loading}
         />
-        <Link to="/login">Schon ein Konto? Anmelden</Link>
+        <Link to="/login">Already have an account? Sign in</Link>
       </div>
     </div>
   );

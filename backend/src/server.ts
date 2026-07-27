@@ -29,12 +29,12 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
   };
 
   if (!email || !name || !password) {
-    return res.status(400).json({ error: "Alle Felder sind Pflicht" });
+    return res.status(400).json({ error: "All fields are required" });
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    return res.status(409).json({ error: "E-Mail bereits registriert" });
+    return res.status(409).json({ error: "Email already registered" });
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
@@ -57,7 +57,7 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
     user && password && (await bcrypt.compare(password, user.passwordHash));
 
   if (!valid) {
-    return res.status(401).json({ error: "Ungültige Zugangsdaten" });
+    return res.status(401).json({ error: "Invalid credentials" });
   }
 
   // Bewusst nur die userId im Token: Das aktive Home wechselt zur Laufzeit,
@@ -76,28 +76,28 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
 type JwtPayload = { userId: number };
 
 interface AuthRequest extends Request {
-  user?: JwtPayload;
+  authData?: JwtPayload;
 }
 
 function requireAuth(req: AuthRequest, res: Response, next: Function) {
   const header = req.headers.authorization;
   if (!header?.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Nicht authentifiziert" });
+    return res.status(401).json({ error: "Not authenticated" });
   }
   try {
-    req.user = jwt.verify(header.slice(7), JWT_SECRET) as JwtPayload;
+    req.authData = jwt.verify(header.slice(7), JWT_SECRET) as JwtPayload;
     next();
   } catch {
-    res.status(401).json({ error: "Token ungültig oder abgelaufen" });
+    res.status(401).json({ error: "Token invalid or expired" });
   }
 }
 
 // Meal-Routen
 app.get("/api/meals", requireAuth, async (req: AuthRequest, res: Response) => {
   const homeId = Number(req.query.homeId);
-  if (!homeId) return res.status(400).json({ error: "homeId ist Pflicht" });
-  if (!(await isMember(req.user!.userId, homeId))) {
-    return res.status(403).json({ error: "Kein Zugriff auf dieses Home" });
+  if (!homeId) return res.status(400).json({ error: "homeId is required" });
+  if (!(await isMember(req.authData!.userId, homeId))) {
+    return res.status(403).json({ error: "No access to this home" });
   }
   const meals = await prisma.meal.findMany({
     where: { homeId },
@@ -121,10 +121,10 @@ app.post("/api/meals", requireAuth, async (req: AuthRequest, res: Response) => {
   if (!name || !ingredients || !homeId) {
     return res
       .status(400)
-      .json({ error: "name, ingredients und homeId sind Pflicht" });
+      .json({ error: "name, ingredients and homeId are required" });
   }
-  if (!(await canEdit(req.user!.userId, homeId))) {
-    return res.status(403).json({ error: "Keine Berechtigung zum Bearbeiten" });
+  if (!(await canEdit(req.authData!.userId, homeId))) {
+    return res.status(403).json({ error: "You do not have permission to edit" });
   }
 
   try {
@@ -153,7 +153,7 @@ app.post("/api/meals", requireAuth, async (req: AuthRequest, res: Response) => {
     });
     res.status(201).json(meal);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unbekannter Fehler";
+    const message = err instanceof Error ? err.message : "Unknown error";
     res.status(400).json({ error: message });
   }
 });
@@ -164,9 +164,9 @@ app.delete(
   async (req: AuthRequest, res: Response) => {
     const id = Number(req.params.id);
     const meal = await prisma.meal.findUnique({ where: { id } });
-    if (!meal) return res.status(404).json({ error: "Meal nicht gefunden" });
-    if (!meal.homeId || !(await canEdit(req.user!.userId, meal.homeId))) {
-      return res.status(403).json({ error: "Keine Berechtigung zum Bearbeiten" });
+    if (!meal) return res.status(404).json({ error: "Meal not found" });
+    if (!meal.homeId || !(await canEdit(req.authData!.userId, meal.homeId))) {
+      return res.status(403).json({ error: "You do not have permission to edit" });
     }
     await prisma.meal.delete({ where: { id } });
     res.status(204).send();
@@ -177,7 +177,7 @@ app.delete(
 // Der Einladungscode liegt im Feld `password` und wird nur an Admins ausgeliefert
 app.get("/api/homes", requireAuth, async (req: AuthRequest, res: Response) => {
   const memberships = await prisma.homeMembership.findMany({
-    where: { userId: req.user!.userId },
+    where: { userId: req.authData!.userId },
     include: { home: true },
   });
   res.json(
@@ -192,14 +192,14 @@ app.get("/api/homes", requireAuth, async (req: AuthRequest, res: Response) => {
 
 app.post("/api/homes", requireAuth, async (req: AuthRequest, res: Response) => {
   const { name } = req.body as { name?: string };
-  if (!name) return res.status(400).json({ error: "Name ist Pflicht" });
+  if (!name) return res.status(400).json({ error: "Name is required" });
   const home = await prisma.home.create({
     data: {
       name,
       password: generateJoinCode(),
       users: {
         create: {
-          userId: req.user!.userId,
+          userId: req.authData!.userId,
           role: "admin",
           lastLogin: new Date(),
         },
@@ -217,18 +217,18 @@ app.post("/api/homes", requireAuth, async (req: AuthRequest, res: Response) => {
 // Home per Einladungscode beitreten
 app.post("/api/homes/join", requireAuth, async (req: AuthRequest, res: Response) => {
   const code = (req.body as { code?: string }).code?.trim().toUpperCase();
-  if (!code) return res.status(400).json({ error: "Code ist Pflicht" });
+  if (!code) return res.status(400).json({ error: "Code is required" });
 
   const home = await prisma.home.findFirst({ where: { password: code } });
-  if (!home) return res.status(404).json({ error: "Ungültiger Einladungscode" });
+  if (!home) return res.status(404).json({ error: "Invalid invite code" });
 
-  if (await getRole(req.user!.userId, home.id)) {
-    return res.status(409).json({ error: "Du bist bereits Mitglied" });
+  if (await getRole(req.authData!.userId, home.id)) {
+    return res.status(409).json({ error: "You are already a member" });
   }
 
   await prisma.homeMembership.create({
     data: {
-      userId: req.user!.userId,
+      userId: req.authData!.userId,
       homeId: home.id,
       role: "user",
       lastLogin: new Date(),
@@ -243,8 +243,8 @@ app.get(
   requireAuth,
   async (req: AuthRequest, res: Response) => {
     const homeId = Number(req.params.id);
-    if (!(await isMember(req.user!.userId, homeId))) {
-      return res.status(403).json({ error: "Kein Zugriff auf dieses Home" });
+    if (!(await isMember(req.authData!.userId, homeId))) {
+      return res.status(403).json({ error: "No access to this home" });
     }
     const members = await prisma.homeMembership.findMany({
       where: { homeId },
@@ -271,21 +271,21 @@ app.patch(
     const { role } = req.body as { role?: Role };
 
     if (!role || !ROLES.includes(role)) {
-      return res.status(400).json({ error: "Ungültige Rolle" });
+      return res.status(400).json({ error: "Invalid role" });
     }
-    if ((await getRole(req.user!.userId, homeId)) !== "admin") {
-      return res.status(403).json({ error: "Nur Admins dürfen Rollen ändern" });
+    if ((await getRole(req.authData!.userId, homeId)) !== "admin") {
+      return res.status(403).json({ error: "Only admins can change roles" });
     }
 
     const target = await prisma.homeMembership.findFirst({
       where: { homeId, userId: targetId },
     });
-    if (!target) return res.status(404).json({ error: "Mitglied nicht gefunden" });
+    if (!target) return res.status(404).json({ error: "Member not found" });
 
     // Der letzte Admin darf sich nicht selbst degradieren
     if (target.role === "admin" && role !== "admin" && (await countAdmins(homeId)) === 1) {
       return res.status(409).json({
-        error: "Das Home braucht mindestens einen Admin",
+        error: "The home needs at least one admin",
       });
     }
 
@@ -304,29 +304,29 @@ app.delete(
   async (req: AuthRequest, res: Response) => {
     const homeId = Number(req.params.id);
     const targetId = Number(req.params.userId);
-    const isSelf = targetId === req.user!.userId;
+    const isSelf = targetId === req.authData!.userId;
 
-    const myRole = await getRole(req.user!.userId, homeId);
+    const myRole = await getRole(req.authData!.userId, homeId);
     if (!myRole) {
-      return res.status(403).json({ error: "Kein Zugriff auf dieses Home" });
+      return res.status(403).json({ error: "No access to this home" });
     }
     // Andere entfernen darf nur ein Admin; austreten darf jeder selbst
     if (!isSelf && myRole !== "admin") {
       return res
         .status(403)
-        .json({ error: "Nur Admins dürfen Mitglieder entfernen" });
+        .json({ error: "Only admins can remove members" });
     }
 
     const target = await prisma.homeMembership.findFirst({
       where: { homeId, userId: targetId },
     });
-    if (!target) return res.status(404).json({ error: "Mitglied nicht gefunden" });
+    if (!target) return res.status(404).json({ error: "Member not found" });
 
     if (target.role === "admin" && (await countAdmins(homeId)) === 1) {
       return res.status(409).json({
         error: isSelf
-          ? "Befördere zuerst jemand anderen zum Admin"
-          : "Das Home braucht mindestens einen Admin",
+          ? "Promote someone else to admin first"
+          : "The home needs at least one admin",
       });
     }
 
@@ -376,9 +376,9 @@ function generateJoinCode() {
 // Alle Einträge eines Homes
 app.get("/api/lists", requireAuth, async (req: AuthRequest, res: Response) => {
   const homeId = Number(req.query.homeId);
-  if (!homeId) return res.status(400).json({ error: "homeId ist Pflicht" });
-  if (!(await isMember(req.user!.userId, homeId))) {
-    return res.status(403).json({ error: "Kein Zugriff auf dieses Home" });
+  if (!homeId) return res.status(400).json({ error: "homeId is required" });
+  if (!(await isMember(req.authData!.userId, homeId))) {
+    return res.status(403).json({ error: "No access to this home" });
   }
   const entries = await prisma.listEntry.findMany({ where: { homeId } });
   res.json(entries);
@@ -390,10 +390,10 @@ app.post("/api/lists", requireAuth, async (req: AuthRequest, res: Response) => {
     name?: string; amount?: string; list?: string; homeId?: number;
   };
   if (!name || !homeId || !list) {
-    return res.status(400).json({ error: "name, list und homeId sind Pflicht" });
+    return res.status(400).json({ error: "name, list and homeId are required" });
   }
-  if (!(await canEdit(req.user!.userId, homeId))) {
-    return res.status(403).json({ error: "Keine Berechtigung zum Bearbeiten" });
+  if (!(await canEdit(req.authData!.userId, homeId))) {
+    return res.status(403).json({ error: "You do not have permission to edit" });
   }
   const entry = await prisma.listEntry.create({
     data: { name, amount: amount ?? "", list, homeId },
@@ -406,9 +406,9 @@ app.patch("/api/lists/:id", requireAuth, async (req: AuthRequest, res: Response)
   const id = Number(req.params.id);
   const { list } = req.body as { list?: string };
   const entry = await prisma.listEntry.findUnique({ where: { id } });
-  if (!entry) return res.status(404).json({ error: "Eintrag nicht gefunden" });
-  if (!(await canEdit(req.user!.userId, entry.homeId))) {
-    return res.status(403).json({ error: "Keine Berechtigung zum Bearbeiten" });
+  if (!entry) return res.status(404).json({ error: "Item not found" });
+  if (!(await canEdit(req.authData!.userId, entry.homeId))) {
+    return res.status(403).json({ error: "You do not have permission to edit" });
   }
   const updated = await prisma.listEntry.update({
     where: { id },
@@ -421,9 +421,9 @@ app.patch("/api/lists/:id", requireAuth, async (req: AuthRequest, res: Response)
 app.delete("/api/lists/:id", requireAuth, async (req: AuthRequest, res: Response) => {
   const id = Number(req.params.id);
   const entry = await prisma.listEntry.findUnique({ where: { id } });
-  if (!entry) return res.status(404).json({ error: "Eintrag nicht gefunden" });
-  if (!(await canEdit(req.user!.userId, entry.homeId))) {
-    return res.status(403).json({ error: "Keine Berechtigung zum Bearbeiten" });
+  if (!entry) return res.status(404).json({ error: "Item not found" });
+  if (!(await canEdit(req.authData!.userId, entry.homeId))) {
+    return res.status(403).json({ error: "You do not have permission to edit" });
   }
   await prisma.listEntry.delete({ where: { id } });
   res.status(204).send();

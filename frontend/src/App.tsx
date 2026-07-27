@@ -48,7 +48,7 @@ function App() {
   return (
     <BrowserRouter>
       <div className="wrapper">
-        <Header title="Header" />
+        <Header />
         <main>
           <AppContent />
         </main>
