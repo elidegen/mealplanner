@@ -1,13 +1,15 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { useAuth } from "../auth/AuthContext";
 
-type Home = { id: number; name: string; role: string };
+type Home = { id: number; name: string; role: string; joinCode?: string };
 
 type HomeContextValue = {
   homes: Home[];
   activeHome: Home | null;
   setActiveHome: (home: Home) => void;
   createHome: (name: string) => Promise<void>;
+  joinHome: (code: string) => Promise<void>;
+  refreshHomes: () => Promise<void>;
   loading: boolean;
 };
 
@@ -19,15 +21,30 @@ export function HomeProvider({ children }: { children: ReactNode }) {
   const [activeHome, setActiveHomeState] = useState<Home | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Lädt die Homes neu. Das aktive Home bleibt erhalten, bekommt aber seine
+  // aktuelle Rolle mit — wichtig, wenn man selbst befördert oder degradiert wurde.
+  async function refreshHomes() {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch("/api/homes", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json()) as Home[];
+      setHomes(data);
+      setActiveHomeState((current) => {
+        const still = current ? data.find((h) => h.id === current.id) : null;
+        return still ?? data[0] ?? null;
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    if (!token) { setLoading(false); return; }
-    fetch("/api/homes", { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((data: Home[]) => {
-        setHomes(data);
-        if (data[0]) setActiveHomeState(data[0]);
-      })
-      .finally(() => setLoading(false));
+    refreshHomes();
   }, [token]);
 
   function setActiveHome(home: Home) {
@@ -47,8 +64,24 @@ export function HomeProvider({ children }: { children: ReactNode }) {
     setActiveHome(newHome);
   }
 
+  async function joinHome(code: string) {
+    const res = await fetch("/api/homes/join", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ code }),
+    });
+    if (!res.ok) {
+      // Das Backend liefert eine konkrete Meldung (falscher Code, schon Mitglied)
+      const data = await res.json().catch(() => ({})) as { error?: string };
+      throw new Error(data.error ?? "Beitreten fehlgeschlagen");
+    }
+    const home = await res.json() as Home;
+    setHomes((prev) => [...prev, home]);
+    setActiveHome(home);
+  }
+
   return (
-    <HomeContext.Provider value={{ homes, activeHome, setActiveHome, createHome, loading }}>
+    <HomeContext.Provider value={{ homes, activeHome, setActiveHome, createHome, joinHome, refreshHomes, loading }}>
       {children}
     </HomeContext.Provider>
   );
