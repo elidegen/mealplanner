@@ -55,6 +55,16 @@ h1 {
   }
 }
 
+.link-button {
+  background: none;
+  border: none;
+  color: var(--color-action-button);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  text-align: left;
+}
+
 .error {
   color: red;
 }

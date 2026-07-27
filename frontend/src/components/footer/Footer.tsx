@@ -5,11 +5,13 @@ import IconAdd from "../../assets/img/icon_add.svg?react";
 import IconBurger from "../../assets/img/icon_burger.svg?react";
 import IconGear from "../../assets/img/icon_gear.svg?react";
 import { Link, useLocation } from "react-router-dom";
+import { useHome } from "../../home/HomeContext";
 
 function Footer() {
   const location = useLocation();
+  const { homes } = useHome();
 
-  if (location.pathname === "/login" || location.pathname === "/register") {
+  if (location.pathname === "/login" || location.pathname === "/register" || homes.length === 0) {
     return null;
   }
 

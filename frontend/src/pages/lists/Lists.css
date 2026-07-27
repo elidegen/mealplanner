@@ -5,3 +5,16 @@
   padding: 12px;
   padding-bottom: 80px;
 }
+
+.list-hint {
+  padding: 24px 12px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--color-lightgrey2);
+}
+
+.list-error {
+  padding: 8px 12px;
+  font-size: 14px;
+  color: red;
+}

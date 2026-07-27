@@ -1,15 +1,26 @@
 import { useState } from "react";
-import TextButton from "../../components/text-button/TextButton";
 import "./Home.css";
-
-const DUMMY_HOMES = ["Home 1", "Home 2", "Home 3"];
+import { useHome } from "../../home/HomeContext";
+import TextButton from "../../components/text-button/TextButton";
 
 function Home() {
-  const [selectedHome, setSelectedHome] = useState<string>(DUMMY_HOMES[0]);
-  const [newHome, setNewHome] = useState<string>("");
+  const { homes, activeHome, setActiveHome, createHome } = useHome();
+  const [name, setName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  function handleLogin() {
-    console.log("Logging into:", selectedHome);
+  async function handleCreate() {
+    if (name.trim() === "") { setError("Bitte gib einen Namen ein"); return; }
+    setLoading(true);
+    try {
+      await createHome(name);
+      setName("");
+      setError(null);
+    } catch {
+      setError("Home erstellen fehlgeschlagen");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -19,27 +30,30 @@ function Home() {
           <label htmlFor="homes">Select your Home</label>
           <select
             id="homes"
-            value={selectedHome}
-            onChange={(e) => setSelectedHome(e.target.value)}
+            value={activeHome?.id ?? ""}
+            onChange={(e) => {
+              const home = homes.find((h) => h.id === Number(e.target.value));
+              if (home) setActiveHome(home);
+            }}
           >
-            {DUMMY_HOMES.map((home) => (
-              <option key={home} value={home}>
-                {home}
+            {homes.map((home) => (
+              <option key={home.id} value={home.id}>
+                {home.name}
               </option>
             ))}
           </select>
         </div>
         <div className="input-wrapper">
-          <label htmlFor="newHome">Add new home</label>
+          <label>Neues Home erstellen</label>
           <input
-            id="newHome"
             type="text"
-            placeholder="Enter passcode"
-            value={newHome}
-            onChange={(e) => setNewHome(e.target.value)}
+            placeholder="Name des Homes"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
+          {error && <p style={{ color: "red", fontSize: "13px" }}>{error}</p>}
+          <TextButton text="Erstellen" onClicked={handleCreate} disabled={loading} />
         </div>
-        <TextButton text="Log in new Home" onClicked={handleLogin} />
       </form>
     </div>
   );

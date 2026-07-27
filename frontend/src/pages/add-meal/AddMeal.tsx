@@ -2,14 +2,16 @@ import { useState } from "react";
 import IconAdd from "../../assets/img/icon_add.svg?react";
 import IconClose from "../../assets/img/icon_close.svg?react";
 import "./AddMeal.css";
-import type { IIngredient, IMeal } from "./MealTypes";
+import type { IIngredient } from "./MealTypes";
 import { useAuth } from "../../auth/AuthContext";
+import { useHome } from "../../home/HomeContext";
 import { apiFetch } from "../../auth/api";
 import LoadingSpinner from "../../components/loading-spinner/LoadingSpinner";
 import Snackbar from "../../components/snackbar/Snackbar";
 
 function AddMeal() {
   const { token } = useAuth();
+  const { activeHome } = useHome();
   const [name, setName] = useState<string>("");
   const [calories, setCalories] = useState<number | null>(null);
   const [currentIngredient, setCurrentIngredient] = useState<string>("");
@@ -39,16 +41,25 @@ function AddMeal() {
 
   async function handleSave() {
     if (!name.trim() || !ingredients.length) return;
+    if (!activeHome) {
+      setSnackbar({
+        id: Date.now(),
+        text: "Kein Home ausgewählt",
+        color: "#dc2626",
+      });
+      return;
+    }
     setLoading(true);
-    const meal: IMeal = {
-      title: name,
-      calories: calories ?? null,
-      ingredients: ingredients,
-    };
     try {
-      await apiFetch<IMeal>("/api/meals", {
+      await apiFetch("/api/meals", {
         method: "POST",
-        body: JSON.stringify(meal),
+        body: JSON.stringify({
+          name,
+          calories: calories ?? undefined,
+          ingredients,
+          homeId: activeHome.id,
+          portions: 1,
+        }),
         token,
       });
       setName("");

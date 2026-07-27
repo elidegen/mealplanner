@@ -3,7 +3,6 @@ import {
   useContext,
   useState,
   useMemo,
-  useEffect,
   type ReactNode,
 } from "react";
 
@@ -19,23 +18,17 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-// temporary token for dev
-const DEV_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTc4MjMzMjYxNSwiZXhwIjoxODEzODY4NjE1fQ.WOa0XkmZUzQawt5cD-uX5PwsPqZRadA4mI0lS53W32o";
-const DEV_USER: User = { id: 2, email: "test@htwg.de", name: "Test" };
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(DEV_TOKEN);
-  const [user, setUser] = useState<User | null>(DEV_USER);
-
-  useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    const savedUser = localStorage.getItem("user");
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser) as User);
-    }
-  }, []);
+  // Direkt beim ersten Render aus dem localStorage lesen, nicht per useEffect:
+  // sonst ist isAuthenticated im ersten Render false und ProtectedRoute
+  // leitet auf /login um, bevor der gespeicherte Token wiederhergestellt ist.
+  const [token, setToken] = useState<string | null>(() =>
+    localStorage.getItem("token"),
+  );
+  const [user, setUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem("user");
+    return saved ? (JSON.parse(saved) as User) : null;
+  });
 
   async function login(email: string, password: string, rememberMe = false) {
     const res = await fetch("/api/auth/login", {
