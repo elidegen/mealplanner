@@ -1,20 +1,14 @@
-export interface IMeal {
-  name: string;
-  macros?: IMacros;
-  ingredients: IIngredient[];
-  tags?: ITag[];
-  portions: number;
-  instructions?: string;
-  public: boolean;
-}
-
 export interface IIngredient {
   name: string;
   amount: string;
+  homeId: number;
+  mealId: number;
 }
 
 export interface ITag {
+  id: number;
   name: string;
+  homeId: number;
 }
 
 export interface IMacros {

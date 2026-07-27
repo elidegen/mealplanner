@@ -2,7 +2,7 @@ import { useState } from "react";
 import IconAdd from "../../assets/img/icon_add.svg?react";
 import IconClose from "../../assets/img/icon_close.svg?react";
 import "./AddMeal.css";
-import type { IIngredient } from "./MealTypes";
+import type { IIngredient, IMeal } from "./MealTypes";
 import { useAuth } from "../../auth/AuthContext";
 import { useHome } from "../../home/HomeContext";
 import { apiFetch } from "../../auth/api";
@@ -50,16 +50,19 @@ function AddMeal() {
       return;
     }
     setLoading(true);
+    const meal: IMeal & { homeId: number } = {
+      name,
+      ingredients,
+      portions: 1,
+      public: false,
+      macros: { calories: calories ?? undefined },
+      homeId: activeHome.id,
+    };
+
     try {
       await apiFetch("/api/meals", {
         method: "POST",
-        body: JSON.stringify({
-          name,
-          calories: calories ?? undefined,
-          ingredients,
-          homeId: activeHome.id,
-          portions: 1,
-        }),
+        body: JSON.stringify(meal),
         token,
       });
       setName("");

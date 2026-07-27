@@ -15,13 +15,6 @@ const RECIPES: IMeal[] = [];
 
 const MEAL_BROWSER: IMeal[] = [];
 
-// So liefert das Backend ein Meal aus (Schema: name + macro statt title/calories)
-export interface IMealResponse {
-  id: number;
-  name: string;
-  macro: { calories: number | null } | null;
-  ingredients: { id: number; name: string; amount: string }[];
-}
 
 function Meals() {
   const { token } = useAuth();
@@ -44,18 +37,11 @@ function Meals() {
     async function loadMeals() {
       setLoading(true);
       try {
-        const data = await apiFetch<IMealResponse[]>(
+        const data = await apiFetch<IMeal[]>(
           `/api/meals?homeId=${activeHome!.id}`,
           { method: "GET", token },
         );
-        setMeals(
-          data.map((m) => ({
-            id: m.id,
-            title: m.name,
-            calories: m.macro?.calories ?? undefined,
-            ingredients: m.ingredients,
-          })),
-        );
+        setMeals(data);
       } catch (err) {
         console.log("fehler", err);
 
@@ -146,13 +132,12 @@ function Meals() {
         </nav>
         <div className="list">
           {list.map((meal) => (
-            <div key={meal.title} className="meal">
-              {meal.image && (
-                <img src={meal.image} className="mealboximg" alt={meal.title} />
-              )}
+            <div key={meal.id} className="meal">
               <div className="displayFlex">
-                <h2>{meal.title}</h2>
-                {meal.calories && <div>Calories: {meal.calories}</div>}
+                <h2>{meal.name}</h2>
+                {meal.macros?.calories && (
+                  <div>Calories: {meal.macros.calories}</div>
+                )}
                 {meal.ingredients.map((ing) => (
                   <span key={ing.name}>
                     - {ing.name} {ing.amount}

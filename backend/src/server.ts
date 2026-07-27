@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { IMacros } from "./types";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -59,7 +60,11 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
     return res.status(401).json({ error: "Ungültige Zugangsdaten" });
   }
 
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "1h" });
+  // Bewusst nur die userId im Token: Das aktive Home wechselt zur Laufzeit,
+  // ein Token müsste sonst bei jedem Home-Wechsel neu ausgestellt werden.
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
+    expiresIn: "1h",
+  });
 
   res.json({
     token,
@@ -96,54 +101,61 @@ app.get("/api/meals", requireAuth, async (req: AuthRequest, res: Response) => {
   }
   const meals = await prisma.meal.findMany({
     where: { homeId },
-    include: { ingredients: true, macro: true, tags: true },
+    include: { ingredients: true, macros: true, tags: true },
   });
   res.json(meals);
 });
 
 app.post("/api/meals", requireAuth, async (req: AuthRequest, res: Response) => {
-  const {
-    name,
-    portions,
-    instructions,
-    calories,
-    homeId,
-    ingredients = [],
-  } = req.body as {
-    name?: string;
-    portions?: number;
-    instructions?: string;
-    calories?: number;
-    homeId?: number;
-    ingredients?: { name: string; amount: string }[];
-  };
+  const { name, macros, ingredients, tags, instructions, portions, homeId } =
+    req.body as {
+      name?: string;
+      ingredients?: { name: string; amount: string }[];
+      tags?: { name: string }[];
+      macros?: IMacros;
+      instructions?: string;
+      portions?: number;
+      homeId?: number;
+    };
 
-  if (!name || !homeId) {
-    return res.status(400).json({ error: "name und homeId sind Pflicht" });
+  if (!name || !ingredients || !homeId) {
+    return res
+      .status(400)
+      .json({ error: "name, ingredients und homeId sind Pflicht" });
   }
   if (!(await canEdit(req.user!.userId, homeId))) {
     return res.status(403).json({ error: "Keine Berechtigung zum Bearbeiten" });
   }
 
-  const meal = await prisma.meal.create({
-    data: {
-      name,
-      portions: portions ?? 1,
-      instructions,
-      public: false,
-      home: { connect: { id: homeId } },
-      macro: { create: { calories } },
-      ingredients: {
-        create: ingredients.map((i) => ({
-          name: i.name,
-          amount: i.amount,
-          homeId,
-        })),
+  try {
+    const meal = await prisma.meal.create({
+      data: {
+        name,
+        macros: { create: macros },
+        ingredients: {
+          create: ingredients.map((ingredient) => ({
+            ...ingredient,
+            homeId,
+          })),
+        },
+        tags: {
+          connectOrCreate: tags?.map((tag) => ({
+            where: { name_homeId: { name: tag.name, homeId } },
+            create: { name: tag.name, homeId },
+          })),
+        },
+        instructions,
+        portions: portions ?? 1,
+        home: { connect: { id: homeId } },
+        public: false,
       },
-    },
-    include: { ingredients: true, macro: true },
-  });
-  res.status(201).json(meal);
+      include: { ingredients: true, macros: true, tags: true },
+    });
+    res.status(201).json(meal);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unbekannter Fehler";
+    res.status(400).json({ error: message });
+  }
 });
 
 app.delete(
@@ -185,7 +197,13 @@ app.post("/api/homes", requireAuth, async (req: AuthRequest, res: Response) => {
     data: {
       name,
       password: generateJoinCode(),
-      users: { create: { userId: req.user!.userId, role: "admin" } },
+      users: {
+        create: {
+          userId: req.user!.userId,
+          role: "admin",
+          lastLogin: new Date(),
+        },
+      },
     },
   });
   res.status(201).json({
@@ -209,7 +227,12 @@ app.post("/api/homes/join", requireAuth, async (req: AuthRequest, res: Response)
   }
 
   await prisma.homeMembership.create({
-    data: { userId: req.user!.userId, homeId: home.id, role: "user" },
+    data: {
+      userId: req.user!.userId,
+      homeId: home.id,
+      role: "user",
+      lastLogin: new Date(),
+    },
   });
   res.status(201).json({ id: home.id, name: home.name, role: "user" });
 });
