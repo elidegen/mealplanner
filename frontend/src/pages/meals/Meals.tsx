@@ -85,32 +85,53 @@ function Meals() {
     }
   }
 
+  // Alle Zutaten einer Mahlzeit auf die Einkaufsliste setzen.
+  // Bereits vorhandene Einträge werden bewusst nicht zusammengefasst:
+  // Zwei Rezepte mit Milch brauchen in der Regel auch zwei Packungen.
   async function addToList(meal: IMeal) {
-    console.log("addtolist");
+    if (!activeHome) {
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: "No home selected",
+        color: "#dc2626",
+      });
+      return;
+    }
+    if (meal.ingredients.length === 0) return;
 
-    // setLoading(true);
-    // try {
-    //   await apiFetch<void>(`/api/meals/${meal.id}`, {
-    //     method: "DELETE",
-    //     token,
-    //   });
-    //   setMeals((prev) => prev.filter((m) => m.id !== meal.id));
-    //   setSnackbar({
-    //     id: ++snackbarId.current,
-    //     text: "Meal deleted",
-    //     color: "#16a34a",
-    //   });
-    // } catch (err) {
-    //   const message =
-    //     err instanceof Error ? err.message : "Deleting meal failed";
-    //   setSnackbar({
-    //     id: ++snackbarId.current,
-    //     text: message,
-    //     color: "#dc2626",
-    //   });
-    // } finally {
-    //   setLoading(false);
-    // }
+    setLoading(true);
+    try {
+      await Promise.all(
+        meal.ingredients.map((ing) =>
+          apiFetch("/api/lists", {
+            method: "POST",
+            body: JSON.stringify({
+              name: ing.name,
+              amount: ing.amount,
+              list: "shopping",
+              homeId: activeHome.id,
+            }),
+            token,
+          }),
+        ),
+      );
+      const count = meal.ingredients.length;
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: `${count} ${count === 1 ? "ingredient" : "ingredients"} added to shopping list`,
+        color: "#16a34a",
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not add to shopping list";
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: message,
+        color: "#dc2626",
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

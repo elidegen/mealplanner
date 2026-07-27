@@ -16,13 +16,12 @@ type Member = {
   role: Role;
 };
 
-// Rangfolge von wenig zu viel Rechten — daraus leiten sich Auf- und Abstieg ab
 const ROLE_ORDER: Role[] = ["gast", "user", "admin"];
 
 const ROLE_LABEL: Record<Role, string> = {
   admin: "Admin",
   user: "User",
-  gast: "Gast",
+  gast: "Guest",
 };
 
 function Users() {
@@ -47,7 +46,7 @@ function Users() {
         return res.json() as Promise<Member[]>;
       })
       .then(setMembers)
-      .catch(() => setError("Mitglieder konnten nicht geladen werden"))
+      .catch(() => setError("Could not load members"))
       .finally(() => setLoading(false));
   }, [activeHome, token]);
 
@@ -71,7 +70,7 @@ function Users() {
       );
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error ?? "Rolle konnte nicht geändert werden");
+        throw new Error(data.error ?? "Could not change role");
       }
       setMembers((prev) =>
         prev.map((m) =>
@@ -82,7 +81,7 @@ function Users() {
       // sonst zeigt die Oberfläche weiter Admin-Rechte an, die es nicht mehr gibt.
       if (member.userId === user?.id) await refreshHomes();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Rolle konnte nicht geändert werden");
+      setError(e instanceof Error ? e.message : "Could not change role");
     }
   }
 
@@ -99,7 +98,7 @@ function Users() {
       );
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error ?? "Mitglied konnte nicht entfernt werden");
+        throw new Error(data.error ?? "Could not remove member");
       }
       setMembers((prev) => prev.filter((m) => m.userId !== member.userId));
       // Selbst ausgetreten: Home ist weg, also Liste neu laden und wegnavigieren
@@ -109,13 +108,13 @@ function Users() {
       }
     } catch (e: unknown) {
       setError(
-        e instanceof Error ? e.message : "Mitglied konnte nicht entfernt werden",
+        e instanceof Error ? e.message : "Could not remove member",
       );
     }
   }
 
   if (!activeHome) {
-    return <p className="users-hint">Kein Home ausgewählt.</p>;
+    return <p className="users-hint">No home selected.</p>;
   }
 
   return (
@@ -123,7 +122,7 @@ function Users() {
       {error && <p className="users-error">{error}</p>}
 
       {loading ? (
-        <p className="users-hint">Lädt…</p>
+        <p className="users-hint">Loading…</p>
       ) : (
         <div className="users-overview">
           {members.map((member) => {
@@ -141,7 +140,7 @@ function Users() {
                 <div className="user-info">
                   <h2 className="user-name">
                     {member.name}
-                    {isSelf && <span className="user-self"> (Du)</span>}
+                    {isSelf && <span className="user-self"> (You)</span>}
                   </h2>
                   <span className="user-email">{member.email}</span>
                 </div>
@@ -152,7 +151,7 @@ function Users() {
                 {canPromote && (
                   <button
                     className="icon-button"
-                    title="Befördern"
+                    title="Promote"
                     onClick={() => changeRole(member, 1)}
                   >
                     <IconArrowUp />
@@ -161,7 +160,7 @@ function Users() {
                 {canDemote && (
                   <button
                     className="icon-button"
-                    title="Degradieren"
+                    title="Demote"
                     onClick={() => changeRole(member, -1)}
                   >
                     <IconArrowDown />
@@ -170,7 +169,7 @@ function Users() {
                 {canRemove && (
                   <button
                     className="icon-button"
-                    title={isSelf ? "Home verlassen" : "Entfernen"}
+                    title={isSelf ? "Leave home" : "Remove"}
                     onClick={() => removeMember(member)}
                   >
                     <IconTrash />
@@ -184,11 +183,11 @@ function Users() {
 
       {isAdmin && activeHome.joinCode && (
         <div className="invite-box">
-          <span className="invite-label">Einladungscode</span>
+          <span className="invite-label">Invite code</span>
           <p className="invite-code">{activeHome.joinCode}</p>
-          <span className="invite-hint">
-            Wer diesen Code eingibt, tritt dem Home als User bei.
-          </span>
+          {/*<span className="invite-hint">
+            Anyone entering this code joins as a user.
+          </span>*/}
         </div>
       )}
     </div>

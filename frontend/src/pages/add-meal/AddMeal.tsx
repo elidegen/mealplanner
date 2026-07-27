@@ -44,7 +44,7 @@ function AddMeal() {
     if (!activeHome) {
       setSnackbar({
         id: Date.now(),
-        text: "Kein Home ausgewählt",
+        text: "No home selected",
         color: "#dc2626",
       });
       return;

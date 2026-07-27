@@ -16,7 +16,7 @@ type HomeContextValue = {
 const HomeContext = createContext<HomeContextValue | null>(null);
 
 export function HomeProvider({ children }: { children: ReactNode }) {
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
   const [homes, setHomes] = useState<Home[]>([]);
   const [activeHome, setActiveHomeState] = useState<Home | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,12 +32,22 @@ export function HomeProvider({ children }: { children: ReactNode }) {
       const res = await fetch("/api/homes", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      // Abgelaufenes oder ungültiges Token: ausloggen statt mit leerem State
+      // weiterzulaufen, sonst zeigt die App geschützte Seiten ohne Daten.
+      if (res.status === 401) {
+        logout();
+        return;
+      }
+      if (!res.ok) throw new Error();
       const data = (await res.json()) as Home[];
       setHomes(data);
       setActiveHomeState((current) => {
         const still = current ? data.find((h) => h.id === current.id) : null;
         return still ?? data[0] ?? null;
       });
+    } catch {
+      setHomes([]);
+      setActiveHomeState(null);
     } finally {
       setLoading(false);
     }
@@ -57,7 +67,7 @@ export function HomeProvider({ children }: { children: ReactNode }) {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ name }),
     });
-    if (!res.ok) throw new Error("Home erstellen fehlgeschlagen");
+    if (!res.ok) throw new Error("Could not create home");
     const home = await res.json() as Home;
     const newHome = { ...home, role: "admin" };
     setHomes((prev) => [...prev, newHome]);
@@ -73,7 +83,7 @@ export function HomeProvider({ children }: { children: ReactNode }) {
     if (!res.ok) {
       // Das Backend liefert eine konkrete Meldung (falscher Code, schon Mitglied)
       const data = await res.json().catch(() => ({})) as { error?: string };
-      throw new Error(data.error ?? "Beitreten fehlgeschlagen");
+      throw new Error(data.error ?? "Could not join home");
     }
     const home = await res.json() as Home;
     setHomes((prev) => [...prev, home]);

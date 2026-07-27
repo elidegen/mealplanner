@@ -13,14 +13,14 @@ function Home() {
   const [joining, setJoining] = useState(false);
 
   async function handleCreate() {
-    if (name.trim() === "") { setError("Bitte gib einen Namen ein"); return; }
+    if (name.trim() === "") { setError("Please enter a name"); return; }
     setLoading(true);
     try {
       await createHome(name);
       setName("");
       setError(null);
     } catch {
-      setError("Home erstellen fehlgeschlagen");
+      setError("Could not create home");
     } finally {
       setLoading(false);
     }
@@ -28,7 +28,7 @@ function Home() {
 
   async function handleJoin() {
     if (joinCode.trim() === "") {
-      setJoinError("Bitte gib einen Einladungscode ein");
+      setJoinError("Please enter an invite code");
       return;
     }
     setJoining(true);
@@ -37,7 +37,7 @@ function Home() {
       setJoinCode("");
       setJoinError(null);
     } catch (e: unknown) {
-      setJoinError(e instanceof Error ? e.message : "Beitreten fehlgeschlagen");
+      setJoinError(e instanceof Error ? e.message : "Could not join home");
     } finally {
       setJoining(false);
     }
@@ -47,7 +47,7 @@ function Home() {
     <div className="home-page">
       <form>
         <div className="input-wrapper">
-          <label htmlFor="homes">Select your Home</label>
+          <label htmlFor="homes">Select your home</label>
           <select
             id="homes"
             value={activeHome?.id ?? ""}
@@ -65,37 +65,37 @@ function Home() {
         </div>
         {activeHome?.joinCode && (
           <div className="input-wrapper">
-            <label>Einladungscode für „{activeHome.name}“</label>
+            <label>Invite code for “{activeHome.name}”</label>
             <p className="join-code">{activeHome.joinCode}</p>
             <span className="hint">
-              Teile diesen Code, um jemanden in dieses Home einzuladen.
+              Share this code to invite someone to this home.
             </span>
           </div>
         )}
 
         <div className="input-wrapper">
-          <label>Neues Home erstellen</label>
+          <label>Create a new home</label>
           <input
             type="text"
-            placeholder="Name des Homes"
+            placeholder="Home name"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           {error && <p className="form-error">{error}</p>}
-          <TextButton text="Erstellen" onClicked={handleCreate} disabled={loading} />
+          <TextButton text="Create" onClicked={handleCreate} disabled={loading} />
         </div>
 
         <div className="input-wrapper">
-          <label htmlFor="joinCode">Einem Home beitreten</label>
+          <label htmlFor="joinCode">Join a home</label>
           <input
             id="joinCode"
             type="text"
-            placeholder="Einladungscode"
+            placeholder="Invite code"
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
           />
           {joinError && <p className="form-error">{joinError}</p>}
-          <TextButton text="Beitreten" onClicked={handleJoin} disabled={joining} />
+          <TextButton text="Join" onClicked={handleJoin} disabled={joining} />
         </div>
       </form>
     </div>

@@ -38,7 +38,7 @@ function Lists() {
         return res.json() as Promise<ListEntry[]>;
       })
       .then(setEntries)
-      .catch(() => setError("Listen konnten nicht geladen werden"))
+      .catch(() => setError("Could not load lists"))
       .finally(() => setLoading(false));
   }, [activeHome, token]);
 
@@ -63,7 +63,7 @@ function Lists() {
       const created = (await res.json()) as ListEntry;
       setEntries((prev) => [...prev, created]);
     } catch {
-      setError("Eintrag konnte nicht gespeichert werden");
+      setError("Could not save item");
     }
   }
 
@@ -97,12 +97,12 @@ function Lists() {
         setEntries((prev) => prev.filter((e) => e.id !== id));
       }
     } catch {
-      setError("Änderung konnte nicht gespeichert werden");
+      setError("Could not save change");
     }
   }
 
   if (!activeHome) {
-    return <p className="list-hint">Kein Home ausgewählt.</p>;
+    return <p className="list-hint">No home selected.</p>;
   }
 
   const visible: IListItem[] = entries
@@ -119,9 +119,9 @@ function Lists() {
       <ListSwitcher activeList={activeList} onSwitch={setActiveList} />
       {error && <p className="list-error">{error}</p>}
       {loading ? (
-        <p className="list-hint">Lädt…</p>
+        <p className="list-hint">Loading…</p>
       ) : visible.length === 0 ? (
-        <p className="list-hint">Diese Liste ist noch leer.</p>
+        <p className="list-hint">This list is empty.</p>
       ) : (
         <List li={visible} propagateChecked={handleCheck} />
       )}

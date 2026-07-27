@@ -16,11 +16,11 @@ function Login() {
   async function handleLogin() {
     setError(null);
     if (!email.includes("@") || !email.includes(".")) {
-      setError("Bitte gib eine gültige E-Mail-Adresse ein");
+      setError("Please enter a valid email address");
       return;
     }
     if (password === "") {
-      setError("Bitte gib dein Passwort ein");
+      setError("Please enter your password");
       return;
     }
     setLoading(true);
@@ -28,7 +28,7 @@ function Login() {
       await login(email, password, rememberMe);
       navigate("/meals");
     } catch {
-      setError("Ungültige E-Mail oder Passwort");
+      setError("Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -46,26 +46,26 @@ function Login() {
         />
         <input
           type="password"
-          placeholder="Passwort"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
         {error && <p className="error">{error}</p>}
-        {loading && <p>Lädt...</p>}
+        {loading && <p>Loading…</p>}
         <label className="remember-me">
           <input
             type="checkbox"
             checked={rememberMe}
             onChange={(e) => setRememberMe(e.target.checked)}
           />
-          Angemeldet bleiben
+          Stay signed in
         </label>
         <TextButton
-          text="Anmelden"
+          text="Sign in"
           onClicked={handleLogin}
           disabled={email === "" || password === "" || loading}
         />
-        <Link to="/register">Noch kein Konto? Registrieren</Link>
+        <Link to="/register">Don't have an account? Sign up</Link>
       </div>
     </div>
   );
