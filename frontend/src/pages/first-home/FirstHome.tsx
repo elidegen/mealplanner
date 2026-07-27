@@ -9,7 +9,7 @@ function FirstHome() {
   const [joinCode, setJoinCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { createHome } = useHome();
+  const { createHome, joinHome } = useHome();
 
   async function handleCreate() {
     if (name.trim() === "") { setError("Bitte gib einen Namen ein"); return; }
@@ -18,6 +18,21 @@ function FirstHome() {
       await createHome(name);
     } catch {
       setError("Home erstellen fehlgeschlagen");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleJoin() {
+    if (joinCode.trim() === "") {
+      setError("Bitte gib einen Einladungscode ein");
+      return;
+    }
+    setLoading(true);
+    try {
+      await joinHome(joinCode.trim());
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Beitreten fehlgeschlagen");
     } finally {
       setLoading(false);
     }
@@ -39,13 +54,13 @@ function FirstHome() {
             type="text"
             placeholder="Einladungscode"
             value={joinCode}
-            onChange={(e) => setJoinCode(e.target.value)}
+            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
           />
         )}
         {error && <p className="error">{error}</p>}
         <TextButton
           text={mode === "create" ? "Erstellen" : "Beitreten"}
-          onClicked={mode === "create" ? handleCreate : () => setError("Beitreten kommt bald")}
+          onClicked={mode === "create" ? handleCreate : handleJoin}
           disabled={loading}
         />
         <button

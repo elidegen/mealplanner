@@ -4,10 +4,13 @@ import { useHome } from "../../home/HomeContext";
 import TextButton from "../../components/text-button/TextButton";
 
 function Home() {
-  const { homes, activeHome, setActiveHome, createHome } = useHome();
+  const { homes, activeHome, setActiveHome, createHome, joinHome } = useHome();
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [joinCode, setJoinCode] = useState("");
+  const [joinError, setJoinError] = useState<string | null>(null);
+  const [joining, setJoining] = useState(false);
 
   async function handleCreate() {
     if (name.trim() === "") { setError("Bitte gib einen Namen ein"); return; }
@@ -20,6 +23,23 @@ function Home() {
       setError("Home erstellen fehlgeschlagen");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleJoin() {
+    if (joinCode.trim() === "") {
+      setJoinError("Bitte gib einen Einladungscode ein");
+      return;
+    }
+    setJoining(true);
+    try {
+      await joinHome(joinCode.trim());
+      setJoinCode("");
+      setJoinError(null);
+    } catch (e: unknown) {
+      setJoinError(e instanceof Error ? e.message : "Beitreten fehlgeschlagen");
+    } finally {
+      setJoining(false);
     }
   }
 
@@ -43,6 +63,16 @@ function Home() {
             ))}
           </select>
         </div>
+        {activeHome?.joinCode && (
+          <div className="input-wrapper">
+            <label>Einladungscode für „{activeHome.name}“</label>
+            <p className="join-code">{activeHome.joinCode}</p>
+            <span className="hint">
+              Teile diesen Code, um jemanden in dieses Home einzuladen.
+            </span>
+          </div>
+        )}
+
         <div className="input-wrapper">
           <label>Neues Home erstellen</label>
           <input
@@ -51,8 +81,21 @@ function Home() {
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          {error && <p style={{ color: "red", fontSize: "13px" }}>{error}</p>}
+          {error && <p className="form-error">{error}</p>}
           <TextButton text="Erstellen" onClicked={handleCreate} disabled={loading} />
+        </div>
+
+        <div className="input-wrapper">
+          <label htmlFor="joinCode">Einem Home beitreten</label>
+          <input
+            id="joinCode"
+            type="text"
+            placeholder="Einladungscode"
+            value={joinCode}
+            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+          />
+          {joinError && <p className="form-error">{joinError}</p>}
+          <TextButton text="Beitreten" onClicked={handleJoin} disabled={joining} />
         </div>
       </form>
     </div>

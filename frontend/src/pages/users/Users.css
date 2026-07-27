@@ -23,37 +23,96 @@
   filter: brightness(0.95);
 }
 
-.user-name {
-  flex: 1;
-  font-weight: normal;
+.user-avatar {
+  height: 44px;
+  width: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: var(--color-action-button);
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
 }
 
-.user-img {
-  height: 60px;
-  width: 60px;
-  object-fit: cover;
+.user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-name {
+  font-weight: normal;
+  font-size: 16px;
+}
+
+.user-self {
+  color: var(--color-lightgrey2);
+  font-size: 13px;
+}
+
+.user-email {
+  font-size: 12px;
+  color: var(--color-lightgrey2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-role {
+  flex-shrink: 0;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-lightgrey2);
+  color: var(--color-lightgrey2);
+}
+
+.role-admin {
+  border-color: var(--color-action-button);
+  color: var(--color-action-button);
+}
+
+.users-hint {
+  padding: 24px 12px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--color-lightgrey2);
+}
+
+.users-error {
+  padding: 10px var(--medium-gap);
+  font-size: 14px;
+  color: red;
+}
+
+.invite-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: var(--big-gap);
+  padding: var(--medium-gap);
+  border: 1px dashed var(--color-lightgrey2);
   border-radius: var(--border-radius);
 }
 
-.button-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.invite-label {
+  font-size: 12px;
+  color: var(--color-lightgrey2);
 }
 
-.add-user-button {
-  background-color: var(--color-action-button);
-  margin: var(--big-gap);
-  padding: var(--small-gap) var(--medium-gap);
-  display: flex;
-  align-items: center;
-  gap: var(--small-gap);
+.invite-code {
+  font-family: monospace;
+  font-size: 24px;
+  letter-spacing: 5px;
+}
 
-  span {
-    color: white;
-  }
-
-  svg {
-    fill: white;
-  }
+.invite-hint {
+  font-size: 12px;
+  color: var(--color-lightgrey2);
+  text-align: center;
 }

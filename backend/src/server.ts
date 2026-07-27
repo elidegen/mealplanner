@@ -121,8 +121,8 @@ app.post("/api/meals", requireAuth, async (req: AuthRequest, res: Response) => {
   if (!name || !homeId) {
     return res.status(400).json({ error: "name und homeId sind Pflicht" });
   }
-  if (!(await isMember(req.user!.userId, homeId))) {
-    return res.status(403).json({ error: "Kein Zugriff auf dieses Home" });
+  if (!(await canEdit(req.user!.userId, homeId))) {
+    return res.status(403).json({ error: "Keine Berechtigung zum Bearbeiten" });
   }
 
   const meal = await prisma.meal.create({
@@ -153,8 +153,8 @@ app.delete(
     const id = Number(req.params.id);
     const meal = await prisma.meal.findUnique({ where: { id } });
     if (!meal) return res.status(404).json({ error: "Meal nicht gefunden" });
-    if (!meal.homeId || !(await isMember(req.user!.userId, meal.homeId))) {
-      return res.status(403).json({ error: "Kein Zugriff auf dieses Home" });
+    if (!meal.homeId || !(await canEdit(req.user!.userId, meal.homeId))) {
+      return res.status(403).json({ error: "Keine Berechtigung zum Bearbeiten" });
     }
     await prisma.meal.delete({ where: { id } });
     res.status(204).send();
@@ -369,8 +369,8 @@ app.post("/api/lists", requireAuth, async (req: AuthRequest, res: Response) => {
   if (!name || !homeId || !list) {
     return res.status(400).json({ error: "name, list und homeId sind Pflicht" });
   }
-  if (!(await isMember(req.user!.userId, homeId))) {
-    return res.status(403).json({ error: "Kein Zugriff auf dieses Home" });
+  if (!(await canEdit(req.user!.userId, homeId))) {
+    return res.status(403).json({ error: "Keine Berechtigung zum Bearbeiten" });
   }
   const entry = await prisma.listEntry.create({
     data: { name, amount: amount ?? "", list, homeId },
@@ -384,8 +384,8 @@ app.patch("/api/lists/:id", requireAuth, async (req: AuthRequest, res: Response)
   const { list } = req.body as { list?: string };
   const entry = await prisma.listEntry.findUnique({ where: { id } });
   if (!entry) return res.status(404).json({ error: "Eintrag nicht gefunden" });
-  if (!(await isMember(req.user!.userId, entry.homeId))) {
-    return res.status(403).json({ error: "Kein Zugriff auf dieses Home" });
+  if (!(await canEdit(req.user!.userId, entry.homeId))) {
+    return res.status(403).json({ error: "Keine Berechtigung zum Bearbeiten" });
   }
   const updated = await prisma.listEntry.update({
     where: { id },
@@ -399,11 +399,28 @@ app.delete("/api/lists/:id", requireAuth, async (req: AuthRequest, res: Response
   const id = Number(req.params.id);
   const entry = await prisma.listEntry.findUnique({ where: { id } });
   if (!entry) return res.status(404).json({ error: "Eintrag nicht gefunden" });
-  if (!(await isMember(req.user!.userId, entry.homeId))) {
-    return res.status(403).json({ error: "Kein Zugriff auf dieses Home" });
+  if (!(await canEdit(req.user!.userId, entry.homeId))) {
+    return res.status(403).json({ error: "Keine Berechtigung zum Bearbeiten" });
   }
   await prisma.listEntry.delete({ where: { id } });
   res.status(204).send();
 });
 
-app.listen(PORT, () => console.log(`API auf http://localhost:${PORT}`));
+// Homes aus der Zeit vor den Einladungscodes nachträglich mit einem Code versehen
+async function backfillJoinCodes() {
+  const ohneCode = await prisma.home.findMany({ where: { password: "" } });
+  for (const home of ohneCode) {
+    await prisma.home.update({
+      where: { id: home.id },
+      data: { password: generateJoinCode() },
+    });
+  }
+  if (ohneCode.length > 0) {
+    console.log(`${ohneCode.length} Home(s) haben einen Einladungscode erhalten`);
+  }
+}
+
+app.listen(PORT, async () => {
+  await backfillJoinCodes();
+  console.log(`API auf http://localhost:${PORT}`);
+});
