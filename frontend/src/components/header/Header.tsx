@@ -3,13 +3,15 @@ import IconChefHat from "../../assets/img/icon_chef_hat.svg?react";
 import IconLogin from "../../assets/img/icon_login.svg?react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
+import { useHome } from "../../home/HomeContext";
 
 function Header({ title }: { title?: string }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
+  const { homes } = useHome();
 
-  if (location.pathname === "/login" || location.pathname === "/register") {
+  if (location.pathname === "/login" || location.pathname === "/register" || isAuthenticated && homes.length === 0) {
     return null;
   }
 

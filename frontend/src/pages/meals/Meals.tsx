@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { IMeal } from "../../types/ListTypes";
 import "./Meals.css";
 import { useAuth } from "../../auth/AuthContext";
+import { useHome } from "../../home/HomeContext";
 import { apiFetch } from "../../auth/api";
 import LoadingSpinner from "../../components/loading-spinner/LoadingSpinner";
 import Snackbar from "../../components/snackbar/Snackbar";
@@ -14,15 +15,17 @@ const RECIPES: IMeal[] = [];
 
 const MEAL_BROWSER: IMeal[] = [];
 
+// So liefert das Backend ein Meal aus (Schema: name + macro statt title/calories)
 export interface IMealResponse {
   id: number;
-  title: string;
-  calories: number | null;
+  name: string;
+  macro: { calories: number | null } | null;
   ingredients: { id: number; name: string; amount: string }[];
 }
 
 function Meals() {
   const { token } = useAuth();
+  const { activeHome } = useHome();
   const [activeTab, setActiveTab] = useState<Tab>("Recipes");
   const [meals, setMeals] = useState<IMeal[]>([]);
   const [loading, setLoading] = useState(false);
@@ -37,14 +40,22 @@ function Meals() {
     meals.length > 0 ? meals : activeTab === "Recipes" ? RECIPES : MEAL_BROWSER;
 
   useEffect(() => {
+    if (!activeHome) return;
     async function loadMeals() {
       setLoading(true);
       try {
-        const data = await apiFetch<IMeal[]>("/api/meals", {
-          method: "GET",
-          token,
-        });
-        setMeals(data);
+        const data = await apiFetch<IMealResponse[]>(
+          `/api/meals?homeId=${activeHome!.id}`,
+          { method: "GET", token },
+        );
+        setMeals(
+          data.map((m) => ({
+            id: m.id,
+            title: m.name,
+            calories: m.macro?.calories ?? undefined,
+            ingredients: m.ingredients,
+          })),
+        );
       } catch (err) {
         console.log("fehler", err);
 
@@ -60,7 +71,7 @@ function Meals() {
       }
     }
     loadMeals();
-  }, [token]);
+  }, [token, activeHome]);
 
   async function deleteMeal(meal: IMeal) {
     setLoading(true);
