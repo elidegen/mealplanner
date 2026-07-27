@@ -1,4 +1,4 @@
-import type { IIngredient } from "../pages/add-meal/MealTypes";
+import type { IIngredient, IMacros, ITag } from "../pages/add-meal/MealTypes";
 
 export interface IListItem {
   id: string;
@@ -16,10 +16,13 @@ export interface SettingsItem {
 
 export interface IMeal {
   id: number;
-  title: string;
+  name: string;
   ingredients: IIngredient[];
   calories?: number;
-  image?: string;
+  macros?: IMacros;
+  portions: number;
+  tags?: ITag[];
+  instructions?: string;
 }
 
 export interface IUser {

@@ -135,12 +135,9 @@ function Meals() {
         </nav>
         <div className="list">
           {list.map((meal) => (
-            <div key={meal.title} className="meal">
-              {meal.image && (
-                <img src={meal.image} className="mealboximg" alt={meal.title} />
-              )}
+            <div key={meal.id} className="meal">
               <div className="displayFlex">
-                <h2>{meal.title}</h2>
+                <h2>{meal.name}</h2>
                 {meal.calories && <div>Calories: {meal.calories}</div>}
                 {meal.ingredients.map((ing) => (
                   <span key={ing.name}>

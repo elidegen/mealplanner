@@ -41,10 +41,27 @@ function AddMeal() {
     if (!name.trim() || !ingredients.length) return;
     setLoading(true);
     const meal: IMeal = {
-      title: name,
-      calories: calories ?? null,
+      name: name,
       ingredients: ingredients,
+      portions: 1,
+      public: false,
+      macros: {
+        proteins: 35,
+        fat: 30,
+        carbs: 56,
+        calories: 500,
+      },
+      tags: [
+        {
+          name: "leFood",
+        },
+        {
+          name: "leFood2",
+        },
+      ],
     };
+    console.log("meal", meal);
+
     try {
       await apiFetch<IMeal>("/api/meals", {
         method: "POST",
