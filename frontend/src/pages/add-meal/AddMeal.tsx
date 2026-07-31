@@ -4,12 +4,14 @@ import IconClose from "../../assets/img/icon_close.svg?react";
 import "./AddMeal.css";
 import type { IIngredient, IMeal } from "./MealTypes";
 import { useAuth } from "../../auth/AuthContext";
+import { useHome } from "../../home/HomeContext";
 import { apiFetch } from "../../auth/api";
 import LoadingSpinner from "../../components/loading-spinner/LoadingSpinner";
 import Snackbar from "../../components/snackbar/Snackbar";
 
 function AddMeal() {
   const { token } = useAuth();
+  const { activeHome } = useHome();
   const [name, setName] = useState<string>("");
   const [calories, setCalories] = useState<number | null>(null);
   const [currentIngredient, setCurrentIngredient] = useState<string>("");
@@ -39,31 +41,26 @@ function AddMeal() {
 
   async function handleSave() {
     if (!name.trim() || !ingredients.length) return;
+    if (!activeHome) {
+      setSnackbar({
+        id: Date.now(),
+        text: "No home selected",
+        color: "#dc2626",
+      });
+      return;
+    }
     setLoading(true);
-    const meal: IMeal = {
-      name: name,
-      ingredients: ingredients,
+    const meal: IMeal & { homeId: number } = {
+      name,
+      ingredients,
       portions: 1,
       public: false,
-      macros: {
-        proteins: 35,
-        fat: 30,
-        carbs: 56,
-        calories: 500,
-      },
-      tags: [
-        {
-          name: "leFood",
-        },
-        {
-          name: "leFood2",
-        },
-      ],
+      macros: { calories: calories ?? undefined },
+      homeId: activeHome.id,
     };
-    console.log("meal", meal);
 
     try {
-      await apiFetch<IMeal>("/api/meals", {
+      await apiFetch("/api/meals", {
         method: "POST",
         body: JSON.stringify(meal),
         token,

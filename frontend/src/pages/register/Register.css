@@ -34,37 +34,6 @@ h1 {
   }
 }
 
-.login-buttons {
-  display: flex;
-  gap: var(--small-gap);
-}
-
-.remember-me {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--color-lightgrey2);
-  cursor: pointer;
-
-  input[type="checkbox"] {
-    width: 14px;
-    height: 14px;
-    accent-color: var(--color-action-button);
-    cursor: pointer;
-  }
-}
-
-.link-button {
-  background: none;
-  border: none;
-  color: var(--color-action-button);
-  cursor: pointer;
-  font-size: 14px;
-  padding: 0;
-  text-align: left;
-}
-
 .error {
   color: red;
 }

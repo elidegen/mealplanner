@@ -1,28 +1,45 @@
 import "./Header.css";
 import IconChefHat from "../../assets/img/icon_chef_hat.svg?react";
 import IconLogin from "../../assets/img/icon_login.svg?react";
+import IconList from "../../assets/img/icon_list.svg?react";
+import IconCalendar from "../../assets/img/icon_calendar.svg?react";
+import IconBurger from "../../assets/img/icon_burger.svg?react";
+import IconGear from "../../assets/img/icon_gear.svg?react";
+import IconHouse from "../../assets/img/icon_house.svg?react";
+import IconUsers from "../../assets/img/icon_users.svg?react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
+import { useHome } from "../../home/HomeContext";
 
-function Header({ title }: { title?: string }) {
+type PageInfo = { title: string; Icon: React.FC };
+
+// Titel und passendes Icon pro Route an einer Stelle
+const PAGES: Record<string, PageInfo> = {
+  "/": { title: "Add Meal", Icon: IconChefHat },
+  "/add-meal": { title: "Add Meal", Icon: IconChefHat },
+  "/meals": { title: "Meals", Icon: IconBurger },
+  "/lists": { title: "Lists", Icon: IconList },
+  "/calendar": { title: "Calendar", Icon: IconCalendar },
+  "/settings": { title: "Settings", Icon: IconGear },
+  "/home": { title: "Home", Icon: IconHouse },
+  "/users": { title: "Members", Icon: IconUsers },
+};
+
+function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
+  const { homes } = useHome();
 
-  if (location.pathname === "/login") {
+  if (
+    location.pathname === "/login" ||
+    location.pathname === "/register" ||
+    (isAuthenticated && homes.length === 0)
+  ) {
     return null;
   }
 
-  const titles: Record<string, string> = {
-    "/": "Add Meal",
-    "/add-meal": "Add Meal",
-    "/lists": "Lists",
-    "/settings": "Settings",
-    "/calendar": "Calendar",
-    "/home": "Home",
-    "/meals": "Meals",
-    "/users": "Users",
-  };
+  const page = PAGES[location.pathname];
 
   function handleLogout() {
     logout();
@@ -31,8 +48,8 @@ function Header({ title }: { title?: string }) {
 
   return (
     <header>
-      <h1>{titles[location.pathname]}</h1>
-      <IconChefHat />
+      <h1>{page?.title}</h1>
+      {page && <page.Icon />}
       {isAuthenticated && (
         <button className="login-button nav-button" onClick={handleLogout}>
           <IconLogin />

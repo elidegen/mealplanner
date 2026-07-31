@@ -11,26 +11,46 @@ import Users from "./pages/users/Users";
 import Home from "./pages/home/Home";
 import Meals from "./pages/meals/Meals";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
+import Register from "./pages/register/Register";
+import { useAuth } from "./auth/AuthContext";
+import { useHome } from "./home/HomeContext";
+import FirstHome from "./pages/first-home/FirstHome";
+
+
+function AppContent() {
+  const { isAuthenticated } = useAuth();
+  const { homes, loading } = useHome();
+
+  if (isAuthenticated && !loading && homes.length === 0) {
+    return <FirstHome />;
+  }
+
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/home" element={<Home />} />
+        <Route path="/" element={<AddMeal />} />
+        <Route path="/add-meal" element={<AddMeal />} />
+        <Route path="/lists" element={<Lists />} />
+        <Route path="/calendar" element={<Calendar />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/users" element={<Users />} />
+        <Route path="/meals" element={<Meals />} />
+      </Route>
+    </Routes>
+  );
+}
 
 function App() {
   return (
     <BrowserRouter>
       <div className="wrapper">
-        <Header title="Header" />
+        <Header />
         <main>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route element={<ProtectedRoute />}>
-              <Route path="/home" element={<Home />} />
-              <Route path="/" element={<AddMeal />} />
-              <Route path="/add-meal" element={<AddMeal />} />
-              <Route path="/lists" element={<Lists />} />
-              <Route path="/calendar" element={<Calendar />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/users" element={<Users />} />
-              <Route path="/meals" element={<Meals />} />
-            </Route>
-          </Routes>
+          <AppContent />
         </main>
         <Footer />
       </div>

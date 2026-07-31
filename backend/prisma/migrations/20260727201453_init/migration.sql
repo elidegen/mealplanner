@@ -11,6 +11,7 @@ CREATE TABLE "HomeMembership" (
     "homeId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
     "role" TEXT NOT NULL,
+    "lastLogin" DATETIME NOT NULL,
     CONSTRAINT "HomeMembership_homeId_fkey" FOREIGN KEY ("homeId") REFERENCES "Home" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "HomeMembership_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
@@ -27,12 +28,12 @@ CREATE TABLE "User" (
 CREATE TABLE "Meal" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "name" TEXT NOT NULL,
-    "macroId" INTEGER NOT NULL,
+    "macroId" INTEGER,
     "portions" INTEGER NOT NULL,
     "instructions" TEXT,
     "homeId" INTEGER,
     "public" BOOLEAN NOT NULL,
-    CONSTRAINT "Meal_macroId_fkey" FOREIGN KEY ("macroId") REFERENCES "Macro" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Meal_macroId_fkey" FOREIGN KEY ("macroId") REFERENCES "Macros" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT "Meal_homeId_fkey" FOREIGN KEY ("homeId") REFERENCES "Home" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
@@ -48,7 +49,7 @@ CREATE TABLE "Ingredient" (
 );
 
 -- CreateTable
-CREATE TABLE "Macro" (
+CREATE TABLE "Macros" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "calories" INTEGER,
     "carbs" INTEGER,
@@ -58,7 +59,8 @@ CREATE TABLE "Macro" (
 
 -- CreateTable
 CREATE TABLE "Tag" (
-    "name" TEXT NOT NULL PRIMARY KEY,
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" TEXT NOT NULL,
     "homeId" INTEGER NOT NULL,
     CONSTRAINT "Tag_homeId_fkey" FOREIGN KEY ("homeId") REFERENCES "Home" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
@@ -76,16 +78,16 @@ CREATE TABLE "ListEntry" (
 -- CreateTable
 CREATE TABLE "_MealToTag" (
     "A" INTEGER NOT NULL,
-    "B" TEXT NOT NULL,
+    "B" INTEGER NOT NULL,
     CONSTRAINT "_MealToTag_A_fkey" FOREIGN KEY ("A") REFERENCES "Meal" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "_MealToTag_B_fkey" FOREIGN KEY ("B") REFERENCES "Tag" ("name") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "_MealToTag_B_fkey" FOREIGN KEY ("B") REFERENCES "Tag" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Tag_name_key" ON "Tag"("name");
+CREATE UNIQUE INDEX "Tag_name_homeId_key" ON "Tag"("name", "homeId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "_MealToTag_AB_unique" ON "_MealToTag"("A", "B");

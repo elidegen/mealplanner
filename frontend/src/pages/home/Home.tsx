@@ -1,45 +1,102 @@
 import { useState } from "react";
-import TextButton from "../../components/text-button/TextButton";
 import "./Home.css";
-
-const DUMMY_HOMES = ["Home 1", "Home 2", "Home 3"];
+import { useHome } from "../../home/HomeContext";
+import TextButton from "../../components/text-button/TextButton";
 
 function Home() {
-  const [selectedHome, setSelectedHome] = useState<string>(DUMMY_HOMES[0]);
-  const [newHome, setNewHome] = useState<string>("");
+  const { homes, activeHome, setActiveHome, createHome, joinHome } = useHome();
+  const [name, setName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [joinCode, setJoinCode] = useState("");
+  const [joinError, setJoinError] = useState<string | null>(null);
+  const [joining, setJoining] = useState(false);
 
-  function handleLogin() {
-    console.log("Logging into:", selectedHome);
+  async function handleCreate() {
+    if (name.trim() === "") { setError("Please enter a name"); return; }
+    setLoading(true);
+    try {
+      await createHome(name);
+      setName("");
+      setError(null);
+    } catch {
+      setError("Could not create home");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleJoin() {
+    if (joinCode.trim() === "") {
+      setJoinError("Please enter an invite code");
+      return;
+    }
+    setJoining(true);
+    try {
+      await joinHome(joinCode.trim());
+      setJoinCode("");
+      setJoinError(null);
+    } catch (e: unknown) {
+      setJoinError(e instanceof Error ? e.message : "Could not join home");
+    } finally {
+      setJoining(false);
+    }
   }
 
   return (
     <div className="home-page">
       <form>
         <div className="input-wrapper">
-          <label htmlFor="homes">Select your Home</label>
+          <label htmlFor="homes">Select your home</label>
           <select
             id="homes"
-            value={selectedHome}
-            onChange={(e) => setSelectedHome(e.target.value)}
+            value={activeHome?.id ?? ""}
+            onChange={(e) => {
+              const home = homes.find((h) => h.id === Number(e.target.value));
+              if (home) setActiveHome(home);
+            }}
           >
-            {DUMMY_HOMES.map((home) => (
-              <option key={home} value={home}>
-                {home}
+            {homes.map((home) => (
+              <option key={home.id} value={home.id}>
+                {home.name}
               </option>
             ))}
           </select>
         </div>
+        {activeHome?.joinCode && (
+          <div className="input-wrapper">
+            <label>Invite code for “{activeHome.name}”</label>
+            <p className="join-code">{activeHome.joinCode}</p>
+            <span className="hint">
+              Share this code to invite someone to this home.
+            </span>
+          </div>
+        )}
+
         <div className="input-wrapper">
-          <label htmlFor="newHome">Add new home</label>
+          <label>Create a new home</label>
           <input
-            id="newHome"
             type="text"
-            placeholder="Enter passcode"
-            value={newHome}
-            onChange={(e) => setNewHome(e.target.value)}
+            placeholder="Home name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
+          {error && <p className="form-error">{error}</p>}
+          <TextButton text="Create" onClicked={handleCreate} disabled={loading} />
         </div>
-        <TextButton text="Log in new Home" onClicked={handleLogin} />
+
+        <div className="input-wrapper">
+          <label htmlFor="joinCode">Join a home</label>
+          <input
+            id="joinCode"
+            type="text"
+            placeholder="Invite code"
+            value={joinCode}
+            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+          />
+          {joinError && <p className="form-error">{joinError}</p>}
+          <TextButton text="Join" onClicked={handleJoin} disabled={joining} />
+        </div>
       </form>
     </div>
   );

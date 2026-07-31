@@ -2,33 +2,47 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import TextButton from "../../components/text-button/TextButton";
 import { useAuth } from "../../auth/AuthContext";
-import "./Login.css";
+import "./Register.css";
 
-function Login() {
+function Register() {
+  const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [rememberMe, setRememberMe] = useState<boolean>(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  async function handleLogin() {
+  async function handleRegister() {
     setError(null);
-    if (!email.includes("@") || !email.includes(".")) {
-      setError("Please enter a valid email address");
-      return;
+    if (name.trim() === "") {
+        setError("Please enter your name");
+    return;
     }
-    if (password === "") {
-      setError("Please enter your password");
-      return;
+    if (!email.includes("@") || !email.includes(".")) {
+        setError("Please enter a valid email address");
+    return;
+    }
+    if (password.length < 8) {
+        setError("Password must be at least 8 characters");
+    return;
     }
     setLoading(true);
+
     try {
-      await login(email, password, rememberMe);
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name, password }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error);
+      }
+      await login(email, password);
       navigate("/meals");
-    } catch {
-      setError("Invalid email or password");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -36,8 +50,14 @@ function Login() {
 
   return (
     <div className="login-wrapper">
-      <h1>Login</h1>
+      <h1>Sign up</h1>
       <div className="login-form">
+        <input
+          type="text"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
         <input
           type="email"
           placeholder="E-Mail"
@@ -52,23 +72,15 @@ function Login() {
         />
         {error && <p className="error">{error}</p>}
         {loading && <p>Loading…</p>}
-        <label className="remember-me">
-          <input
-            type="checkbox"
-            checked={rememberMe}
-            onChange={(e) => setRememberMe(e.target.checked)}
-          />
-          Stay signed in
-        </label>
         <TextButton
-          text="Sign in"
-          onClicked={handleLogin}
-          disabled={email === "" || password === "" || loading}
+          text="Sign up"
+          onClicked={handleRegister}
+          disabled={name === "" || email === "" || password === "" || loading}
         />
-        <Link to="/register">Don't have an account? Sign up</Link>
+        <Link to="/login">Already have an account? Sign in</Link>
       </div>
     </div>
   );
 }
 
-export default Login;
+export default Register;

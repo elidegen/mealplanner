@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { IMeal } from "../../types/ListTypes";
 import "./Meals.css";
 import { useAuth } from "../../auth/AuthContext";
+import { useHome } from "../../home/HomeContext";
 import { apiFetch } from "../../auth/api";
 import LoadingSpinner from "../../components/loading-spinner/LoadingSpinner";
 import Snackbar from "../../components/snackbar/Snackbar";
@@ -14,15 +15,10 @@ const RECIPES: IMeal[] = [];
 
 const MEAL_BROWSER: IMeal[] = [];
 
-export interface IMealResponse {
-  id: number;
-  title: string;
-  calories: number | null;
-  ingredients: { id: number; name: string; amount: string }[];
-}
 
 function Meals() {
   const { token } = useAuth();
+  const { activeHome } = useHome();
   const [activeTab, setActiveTab] = useState<Tab>("Recipes");
   const [meals, setMeals] = useState<IMeal[]>([]);
   const [loading, setLoading] = useState(false);
@@ -37,13 +33,14 @@ function Meals() {
     meals.length > 0 ? meals : activeTab === "Recipes" ? RECIPES : MEAL_BROWSER;
 
   useEffect(() => {
+    if (!activeHome) return;
     async function loadMeals() {
       setLoading(true);
       try {
-        const data = await apiFetch<IMeal[]>("/api/meals", {
-          method: "GET",
-          token,
-        });
+        const data = await apiFetch<IMeal[]>(
+          `/api/meals?homeId=${activeHome!.id}`,
+          { method: "GET", token },
+        );
         setMeals(data);
       } catch (err) {
         console.log("fehler", err);
@@ -60,7 +57,7 @@ function Meals() {
       }
     }
     loadMeals();
-  }, [token]);
+  }, [token, activeHome]);
 
   async function deleteMeal(meal: IMeal) {
     setLoading(true);
@@ -88,32 +85,53 @@ function Meals() {
     }
   }
 
+  // Alle Zutaten einer Mahlzeit auf die Einkaufsliste setzen.
+  // Bereits vorhandene Einträge werden bewusst nicht zusammengefasst:
+  // Zwei Rezepte mit Milch brauchen in der Regel auch zwei Packungen.
   async function addToList(meal: IMeal) {
-    console.log("addtolist");
+    if (!activeHome) {
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: "No home selected",
+        color: "#dc2626",
+      });
+      return;
+    }
+    if (meal.ingredients.length === 0) return;
 
-    // setLoading(true);
-    // try {
-    //   await apiFetch<void>(`/api/meals/${meal.id}`, {
-    //     method: "DELETE",
-    //     token,
-    //   });
-    //   setMeals((prev) => prev.filter((m) => m.id !== meal.id));
-    //   setSnackbar({
-    //     id: ++snackbarId.current,
-    //     text: "Meal deleted",
-    //     color: "#16a34a",
-    //   });
-    // } catch (err) {
-    //   const message =
-    //     err instanceof Error ? err.message : "Deleting meal failed";
-    //   setSnackbar({
-    //     id: ++snackbarId.current,
-    //     text: message,
-    //     color: "#dc2626",
-    //   });
-    // } finally {
-    //   setLoading(false);
-    // }
+    setLoading(true);
+    try {
+      await Promise.all(
+        meal.ingredients.map((ing) =>
+          apiFetch("/api/lists", {
+            method: "POST",
+            body: JSON.stringify({
+              name: ing.name,
+              amount: ing.amount,
+              list: "shopping",
+              homeId: activeHome.id,
+            }),
+            token,
+          }),
+        ),
+      );
+      const count = meal.ingredients.length;
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: `${count} ${count === 1 ? "ingredient" : "ingredients"} added to shopping list`,
+        color: "#16a34a",
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not add to shopping list";
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: message,
+        color: "#dc2626",
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -138,7 +156,9 @@ function Meals() {
             <div key={meal.id} className="meal">
               <div className="displayFlex">
                 <h2>{meal.name}</h2>
-                {meal.calories && <div>Calories: {meal.calories}</div>}
+                {meal.macros?.calories && (
+                  <div>Calories: {meal.macros.calories}</div>
+                )}
                 {meal.ingredients.map((ing) => (
                   <span key={ing.name}>
                     - {ing.name} {ing.amount}
