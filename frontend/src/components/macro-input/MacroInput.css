@@ -1,0 +1,29 @@
+.macro-wrapper {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--small-gap);
+}
+
+.sec-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+  max-width: 50%;
+
+  input#carbs,
+  input#protein {
+    margin-bottom: var(--small-gap);
+  }
+}
+
+.calories-wrapper {
+  display: flex;
+}
+
+.calc-button {
+  margin-left: var(--small-gap);
+}
+
+input {
+  width: 100%;
+}

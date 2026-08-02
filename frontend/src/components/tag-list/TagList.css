@@ -1,0 +1,33 @@
+.tag-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.tag {
+  font-size: 12px;
+  font-weight: normal;
+  background-color: white;
+  border: 1px solid var(--color-hover-primary);
+  padding: 3px;
+  border-radius: 20px;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  p {
+    margin: 0 5px;
+  }
+}
+
+.icon-close {
+  padding: 2px;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  transition: all 125ms;
+  &:hover {
+    background-color: var(--color-hover-primary);
+  }
+}

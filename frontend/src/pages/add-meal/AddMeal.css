@@ -18,7 +18,7 @@ form {
   gap: 5px;
 }
 
-.ingredient-wrapper {
+.add-wrapper {
   display: flex;
   border-collapse: collapse;
 
@@ -30,9 +30,15 @@ form {
     width: 100px;
   }
 
+  input#tag {
+    margin-right: var(--small-gap);
+    width: 100%;
+  }
+
   input#ingredients {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
+    width: 100%;
   }
 }
 
@@ -49,13 +55,17 @@ form input {
 }
 
 .ingredients-list {
-  list-style-type: disc;
+  height: fit-content;
   padding-left: var(--medium-gap);
   li {
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
+}
+
+.tag-list {
+  height: fit-content;
 }
 
 .default-button {

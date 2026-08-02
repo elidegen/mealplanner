@@ -1,22 +1,22 @@
 import { useState } from "react";
-import IconAdd from "../../assets/img/icon_add.svg?react";
-import IconClose from "../../assets/img/icon_close.svg?react";
 import "./AddMeal.css";
-import type { IIngredient, IMeal } from "./MealTypes";
+import type { IIngredient, IMacros, IMeal, ITag } from "./MealTypes";
 import { useAuth } from "../../auth/AuthContext";
 import { useHome } from "../../home/HomeContext";
 import { apiFetch } from "../../auth/api";
 import LoadingSpinner from "../../components/loading-spinner/LoadingSpinner";
 import Snackbar from "../../components/snackbar/Snackbar";
+import MacroInput from "../../components/macro-input/MacroInput";
+import IngredientInput from "../../components/ingredient-input/IngredientInput";
+import TagInput from "../../components/tag-input/TagInput";
 
 function AddMeal() {
   const { token } = useAuth();
   const { activeHome } = useHome();
   const [name, setName] = useState<string>("");
-  const [calories, setCalories] = useState<number | null>(null);
-  const [currentIngredient, setCurrentIngredient] = useState<string>("");
-  const [currentAmount, setCurrentAmount] = useState<string>("");
   const [ingredients, setIngredients] = useState<IIngredient[]>([]);
+  const [tags, setTags] = useState<ITag[]>([]);
+  const [macros, setMacros] = useState<IMacros>();
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState<{
     id: number;
@@ -24,19 +24,24 @@ function AddMeal() {
     color: string;
   } | null>(null);
 
-  function addIngredient() {
-    if (currentIngredient.trim() === "" || currentAmount.trim() === "") return;
-    const ingredient: IIngredient = {
-      name: currentIngredient,
-      amount: currentAmount,
-    };
+  function addIngredient(ingredient: IIngredient) {
     setIngredients((prev) => [...prev, ingredient]);
-    setCurrentIngredient("");
-    setCurrentAmount("");
   }
 
   function removeIngredient(name: string) {
     setIngredients((prev) => prev.filter((ing) => ing.name !== name));
+  }
+
+  function addTag(tag: ITag) {
+    setTags((prev) => [...prev, tag]);
+  }
+
+  function removeTag(name: string) {
+    setTags((prev) => prev.filter((ing) => ing.name !== name));
+  }
+
+  function addMacros(macros: IMacros) {
+    setMacros(macros);
   }
 
   async function handleSave() {
@@ -55,7 +60,7 @@ function AddMeal() {
       ingredients,
       portions: 1,
       public: false,
-      macros: { calories: calories ?? undefined },
+      macros: { macros: macros },
       homeId: activeHome.id,
     };
 
@@ -66,7 +71,6 @@ function AddMeal() {
         token,
       });
       setName("");
-      setCalories(null);
       setIngredients([]);
       setSnackbar({
         id: Date.now(),
@@ -95,60 +99,14 @@ function AddMeal() {
               onChange={(e) => setName(e.target.value)}
             />
           </div>
-          <div className="input-wrapper">
-            <label htmlFor="calories">Calories</label>
-            <input
-              id="calories"
-              type="number"
-              placeholder="Enter calories amount"
-              value={calories ?? ""}
-              onChange={(e) =>
-                setCalories(
-                  e.target.value === "" ? null : Number(e.target.value),
-                )
-              }
-            />
-          </div>
-          <div className="input-wrapper">
-            <label htmlFor="ingredients">Ingredients</label>
-            <div className="ingredient-wrapper">
-              <input
-                id="ingredients"
-                type="text"
-                placeholder="Enter name"
-                value={currentIngredient}
-                onChange={(e) => setCurrentIngredient(e.target.value)}
-              />
-              <input
-                id="amount"
-                type="text"
-                placeholder="Enter amount"
-                value={currentAmount}
-                onChange={(e) => setCurrentAmount(e.target.value)}
-              />
-              <button
-                className="icon-button"
-                type="button"
-                onClick={addIngredient}
-              >
-                <IconAdd />
-              </button>
-            </div>
-            <ul className="ingredients-list">
-              {ingredients.map((ingredient, index) => (
-                <li key={index}>
-                  {ingredient.name} {ingredient.amount}
-                  <button
-                    className="icon-button"
-                    type="button"
-                    onClick={() => removeIngredient(ingredient.name)}
-                  >
-                    <IconClose />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <TagInput tags={tags} addTag={addTag} removeTag={removeTag} />
+          <IngredientInput
+            ingredients={ingredients}
+            addIngredient={addIngredient}
+            removeIngredient={removeIngredient}
+          />
+          <MacroInput addMacros={addMacros} />
+
           <button className="default-button" onClick={handleSave}>
             Save
           </button>
