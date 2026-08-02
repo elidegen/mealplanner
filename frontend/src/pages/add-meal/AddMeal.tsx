@@ -16,7 +16,7 @@ function AddMeal() {
   const [name, setName] = useState<string>("");
   const [ingredients, setIngredients] = useState<IIngredient[]>([]);
   const [tags, setTags] = useState<ITag[]>([]);
-  const [macros, setMacros] = useState<IMacros>();
+  const [macros, setMacros] = useState<IMacros | null>(null);
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState<{
     id: number;
@@ -60,7 +60,13 @@ function AddMeal() {
       ingredients,
       portions: 1,
       public: false,
-      macros: { macros: macros },
+      tags: tags,
+      macros: {
+        proteins: macros ? macros.proteins : null,
+        carbs: macros ? macros.carbs : null,
+        fat: macros ? macros.fat : null,
+        calories: macros ? macros.calories : null,
+      },
       homeId: activeHome.id,
     };
 

@@ -1,8 +1,8 @@
 export interface IMeal {
   name: string;
-  macros?: IMacros;
+  macros: IMacros | null;
   ingredients: IIngredient[];
-  tags?: ITag[];
+  tags: ITag[];
   portions: number;
   instructions?: string;
   public: boolean;
@@ -18,8 +18,8 @@ export interface ITag {
 }
 
 export interface IMacros {
-  calories?: number;
-  proteins?: number;
-  carbs?: number;
-  fat?: number;
+  calories: number | null;
+  proteins: number | null;
+  carbs: number | null;
+  fat: number | null;
 }
