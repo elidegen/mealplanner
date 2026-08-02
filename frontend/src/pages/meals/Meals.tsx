@@ -6,8 +6,8 @@ import { useHome } from "../../home/HomeContext";
 import { apiFetch } from "../../auth/api";
 import LoadingSpinner from "../../components/loading-spinner/LoadingSpinner";
 import Snackbar from "../../components/snackbar/Snackbar";
-import IconTrash from "../../assets/img/icon_trash.svg?react";
-import IconListAdd from "../../assets/img/icon_list_add.svg?react";
+import MealCard from "../../components/meal-card/MealCard";
+import MealCardPopup from "../../components/meal-card-popup/MealCardPopup";
 
 type Tab = "Recipes" | "MealBrowser";
 
@@ -15,12 +15,18 @@ const RECIPES: IMeal[] = [];
 
 const MEAL_BROWSER: IMeal[] = [];
 
-
 function Meals() {
   const { token } = useAuth();
   const { activeHome } = useHome();
   const [activeTab, setActiveTab] = useState<Tab>("Recipes");
   const [meals, setMeals] = useState<IMeal[]>([]);
+  const [mealPopup, setMealPopup] = useState<{
+    visible: boolean;
+    meal: IMeal | null;
+  }>({
+    visible: false,
+    meal: null,
+  });
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState<{
     id: number;
@@ -59,35 +65,6 @@ function Meals() {
     loadMeals();
   }, [token, activeHome]);
 
-  async function deleteMeal(meal: IMeal) {
-    setLoading(true);
-    try {
-      await apiFetch<void>(`/api/meals/${meal.id}`, {
-        method: "DELETE",
-        token,
-      });
-      setMeals((prev) => prev.filter((m) => m.id !== meal.id));
-      setSnackbar({
-        id: ++snackbarId.current,
-        text: "Meal deleted",
-        color: "#16a34a",
-      });
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Deleting meal failed";
-      setSnackbar({
-        id: ++snackbarId.current,
-        text: message,
-        color: "#dc2626",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // Alle Zutaten einer Mahlzeit auf die Einkaufsliste setzen.
-  // Bereits vorhandene Einträge werden bewusst nicht zusammengefasst:
-  // Zwei Rezepte mit Milch brauchen in der Regel auch zwei Packungen.
   async function addToList(meal: IMeal) {
     if (!activeHome) {
       setSnackbar({
@@ -134,6 +111,44 @@ function Meals() {
     }
   }
 
+  async function deleteMeal(meal: IMeal) {
+    setLoading(true);
+    try {
+      await apiFetch<void>(`/api/meals/${meal.id}`, {
+        method: "DELETE",
+        token,
+      });
+      setMeals((prev) => prev.filter((m) => m.id !== meal.id));
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: "Meal deleted",
+        color: "#16a34a",
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Deleting meal failed";
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: message,
+        color: "#dc2626",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function cook(meal: IMeal) {
+    console.log("meal", meal);
+  }
+
+  function closePopup() {
+    setMealPopup({ visible: false, meal: null });
+  }
+
+  function openPopup(meal: IMeal) {
+    setMealPopup({ visible: true, meal: meal });
+  }
+
   return (
     <>
       <div className="meals-page">
@@ -153,36 +168,7 @@ function Meals() {
         </nav>
         <div className="list">
           {list.map((meal) => (
-            <div key={meal.id} className="meal">
-              <div className="displayFlex">
-                <h2>{meal.name}</h2>
-                {meal.macros?.calories && (
-                  <div>Calories: {meal.macros.calories}</div>
-                )}
-                {meal.ingredients.map((ing) => (
-                  <span key={ing.name}>
-                    - {ing.name} {ing.amount}
-                  </span>
-                ))}
-              </div>
-              <div className="button-wrapper">
-                <button
-                  className="nav-button"
-                  type="button"
-                  onClick={() => addToList(meal)}
-                >
-                  <IconListAdd />
-                </button>
-
-                <button
-                  className="nav-button"
-                  type="button"
-                  onClick={() => deleteMeal(meal)}
-                >
-                  <IconTrash />
-                </button>
-              </div>
-            </div>
+            <MealCard meal={meal} key={meal.id} openPopup={openPopup} />
           ))}
         </div>
       </div>
@@ -195,6 +181,10 @@ function Meals() {
           duration={3000}
         />
       )}
+      <MealCardPopup
+        mealPopup={mealPopup}
+        functions={{ closePopup, addToList, deleteMeal, cook }}
+      />
     </>
   );
 }

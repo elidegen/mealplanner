@@ -31,3 +31,8 @@ export interface IUser {
   rights: "Admin" | "User";
   img?: string;
 }
+
+export interface IMealPopup {
+  visible: boolean;
+  meal: IMeal;
+}

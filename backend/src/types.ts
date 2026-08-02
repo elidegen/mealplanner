@@ -17,3 +17,10 @@ export interface IMacros {
   carbs?: number;
   fat?: number;
 }
+
+export interface IListEntry {
+  name: string;
+  amount: string;
+  list: string;
+  homeId: number;
+}

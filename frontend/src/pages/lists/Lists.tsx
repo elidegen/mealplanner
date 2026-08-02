@@ -28,6 +28,7 @@ function Lists() {
   // Einträge des aktiven Homes laden — bei Home-Wechsel erneut
   useEffect(() => {
     if (!activeHome || !token) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(null);
     fetch(`/api/lists?homeId=${activeHome.id}`, {
