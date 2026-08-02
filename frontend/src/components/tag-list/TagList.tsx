@@ -11,7 +11,7 @@ function TagList({ tags, removeTag }: Props) {
   return (
     <div className="tag-wrapper">
       {tags.map((tag) => (
-        <div className="tag">
+        <div className="tag" key={tag.name}>
           <p>{tag.name}</p>
           {removeTag && (
             <IconClose
