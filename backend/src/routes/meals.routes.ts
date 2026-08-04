@@ -13,8 +13,23 @@ mealsRouter.get("/", requireAuth, async (req: AuthRequest, res: Response) => {
   if (!(await isMember(req.authData!.userId, homeId))) {
     return res.status(403).json({ error: "No access to this home" });
   }
+
+  // ?tags=vegan&tags=schnell - Express liefert bei einem Wert einen String,
+  // bei mehreren ein Array, ohne Parameter undefined
+  const rawTags = req.query.tags;
+  const tagNames = (
+    rawTags === undefined ? [] : Array.isArray(rawTags) ? rawTags : [rawTags]
+  )
+    .map((tag) => String(tag).trim())
+    .filter((tag) => tag !== "");
+
   const meals = await prisma.meal.findMany({
-    where: { homeId },
+    where: {
+      homeId,
+      // Ein eigenes "some" pro Tag, damit das Meal alle mitbringen muss.
+      // Ohne Tags bleibt das Array leer und schränkt nichts ein.
+      AND: tagNames.map((name) => ({ tags: { some: { name, homeId } } })),
+    },
     include: { ingredients: true, macros: true, tags: true },
   });
   res.json(meals);

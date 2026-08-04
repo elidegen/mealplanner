@@ -3,7 +3,7 @@ main {
   flex-direction: column;
   flex: 1;
   height: 100%;
-  padding: var(--header-height) var(--small-gap) var(--footer-height);
+  padding: var(--header-height) var(--medium-gap) var(--footer-height);
 }
 
 .wrapper {

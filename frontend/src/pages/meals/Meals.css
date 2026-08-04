@@ -32,9 +32,9 @@ nav {
 .list {
   display: grid;
   overflow-y: auto;
+  padding-top: var(--medium-gap);
   grid-template-columns: repeat(1, 1fr);
   gap: var(--medium-gap);
-  padding: var(--medium-gap);
 }
 
 .meal {

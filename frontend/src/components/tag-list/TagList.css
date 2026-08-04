@@ -21,6 +21,13 @@
   }
 }
 
+.selected {
+  background-color: var(--color-primary);
+  p {
+    color: var(--color-white);
+  }
+}
+
 .icon-close {
   padding: 2px;
   height: 20px;

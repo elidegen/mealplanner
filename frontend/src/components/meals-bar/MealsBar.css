@@ -1,0 +1,19 @@
+.panel {
+  background-color: var(--color-white);
+  padding: var(--small-gap);
+  border-radius: var(--border-radius);
+  transition: 225ms all ease;
+  overflow: hidden;
+}
+
+.close {
+  transition: 225ms all ease;
+  height: 0;
+  margin-top: -20px;
+  padding: 0;
+}
+
+.open {
+  transition: 225ms all ease;
+  height: fit-content;
+}

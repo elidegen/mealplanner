@@ -1,7 +1,7 @@
 .add-meal-page {
   display: flex;
   justify-content: center;
-  padding: var(--medium-gap);
+  padding-top: var(--medium-gap);
 }
 
 form {

@@ -7,6 +7,7 @@ import { mealsRouter } from "./routes/meals.routes";
 import { homesRouter } from "./routes/homes.routes";
 import { listsRouter } from "./routes/lists.routes";
 import { backfillJoinCodes } from "./services/joinCode";
+import { tagsRouter } from "./routes/tags.routes";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,6 +24,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/meals", mealsRouter);
 app.use("/api/homes", homesRouter);
 app.use("/api/lists", listsRouter);
+app.use("/api/tags", tagsRouter);
 
 app.listen(PORT, async () => {
   await backfillJoinCodes();

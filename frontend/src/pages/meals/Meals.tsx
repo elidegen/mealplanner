@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ListType, type IMeal } from "../../types/ListTypes";
+import type { ITag } from "../add-meal/MealTypes";
 import "./Meals.css";
 import { useAuth } from "../../auth/AuthContext";
 import { useHome } from "../../home/HomeContext";
@@ -8,8 +9,9 @@ import LoadingSpinner from "../../components/loading-spinner/LoadingSpinner";
 import Snackbar from "../../components/snackbar/Snackbar";
 import MealCard from "../../components/meal-card/MealCard";
 import MealCardPopup from "../../components/meal-card-popup/MealCardPopup";
+import MealsBar from "../../components/meals-bar/MealsBar";
 
-type Tab = "Recipes" | "MealBrowser";
+export type Tab = "Recipes" | "MealBrowser";
 
 const RECIPES: IMeal[] = [];
 
@@ -20,6 +22,7 @@ function Meals() {
   const { activeHome } = useHome();
   const [activeTab, setActiveTab] = useState<Tab>("Recipes");
   const [meals, setMeals] = useState<IMeal[]>([]);
+  const [selectedTags, setSelectedTags] = useState<ITag[]>([]);
   const [mealPopup, setMealPopup] = useState<{
     visible: boolean;
     meal: IMeal | null;
@@ -43,13 +46,17 @@ function Meals() {
     async function loadMeals() {
       setLoading(true);
       try {
-        const data = await apiFetch<IMeal[]>(
-          `/api/meals?homeId=${activeHome!.id}`,
-          { method: "GET", token },
-        );
+        // ergibt homeId=1&tags=vegan&tags=schnell
+        const params = new URLSearchParams({ homeId: String(activeHome!.id) });
+        selectedTags.forEach((tag) => params.append("tags", tag.name));
+
+        const data = await apiFetch<IMeal[]>(`/api/meals?${params}`, {
+          method: "GET",
+          token,
+        });
         setMeals(data);
       } catch (err) {
-        console.log("fehler", err);
+        console.log("err", err);
 
         const message =
           err instanceof Error ? err.message : "Error while loading meals";
@@ -63,7 +70,11 @@ function Meals() {
       }
     }
     loadMeals();
-  }, [token, activeHome]);
+  }, [token, activeHome, selectedTags]);
+
+  function switchActiveTab(tab: Tab) {
+    setActiveTab(tab);
+  }
 
   async function addToList(meal: IMeal) {
     if (!activeHome) {
@@ -194,20 +205,12 @@ function Meals() {
   return (
     <>
       <div className="meals-page">
-        <nav>
-          <button
-            className={`listbox ${activeTab === "Recipes" ? "selected" : ""}`}
-            onClick={() => setActiveTab("Recipes")}
-          >
-            <span>Recipes</span>
-          </button>
-          <button
-            className={`listbox ${activeTab === "MealBrowser" ? "selected" : ""}`}
-            onClick={() => setActiveTab("MealBrowser")}
-          >
-            <span>Meal Browser</span>
-          </button>
-        </nav>
+        <MealsBar
+          activeTab={activeTab}
+          switchActiveTab={switchActiveTab}
+          selectedTags={selectedTags}
+          updateSelectedTags={setSelectedTags}
+        />
         <div className="list">
           {list.map((meal) => (
             <MealCard meal={meal} key={meal.id} openPopup={openPopup} />
