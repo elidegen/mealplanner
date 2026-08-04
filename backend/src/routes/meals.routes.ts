@@ -24,7 +24,7 @@ mealsRouter.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
   const { name, macros, ingredients, tags, instructions, portions, homeId } =
     req.body as {
       name?: string;
-      ingredients?: { name: string; amount: string }[];
+      ingredients?: { name: string; amount: number; unit: string }[];
       tags?: { name: string }[];
       macros?: IMacros;
       instructions?: string;

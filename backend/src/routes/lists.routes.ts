@@ -20,22 +20,24 @@ listsRouter.get("/", requireAuth, async (req: AuthRequest, res: Response) => {
 
 // Neuen Eintrag anlegen
 listsRouter.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
-  const { name, amount, list, homeId } = req.body as {
+  const { name, amount, unit, list, homeId } = req.body as {
     name?: string;
-    amount?: string;
+    amount?: number;
+    unit?: string;
     list?: string;
     homeId?: number;
   };
-  if (!name || !homeId || !list) {
+  // amount darf 0 sein und unit ein leerer String ("2 Eier"), deshalb kein truthy-Check
+  if (!name || !homeId || !list || amount === undefined || unit === undefined) {
     return res
       .status(400)
-      .json({ error: "name, list and homeId are required" });
+      .json({ error: "name, list, amount, unit and homeId are required" });
   }
   if (!(await canEdit(req.authData!.userId, homeId))) {
     return res.status(403).json({ error: "No permission to edit" });
   }
   const entry = await prisma.listEntry.create({
-    data: { name, amount: amount ?? "", list, homeId },
+    data: { name, amount, unit, list, homeId },
   });
   res.status(201).json(entry);
 });
@@ -63,6 +65,59 @@ listsRouter.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
 
 //   res.status(201).json("Listentry successfully created!");
 // });
+
+// Zutat abziehen (z.B. beim Kochen aus der Pantry).
+// Muss VOR "/:id" stehen, sonst schluckt die :id-Route diesen Pfad.
+listsRouter.patch(
+  "/reduce-ingredient",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    const { name, amount, unit, list, homeId } = req.body as {
+      name?: string;
+      amount?: number;
+      unit?: string;
+      list?: string;
+      homeId?: number;
+    };
+    if (
+      !name ||
+      !homeId ||
+      !list ||
+      amount === undefined ||
+      unit === undefined
+    ) {
+      return res
+        .status(400)
+        .json({ error: "name, list, amount, unit and homeId are required" });
+    }
+    if (!(await canEdit(req.authData!.userId, homeId))) {
+      return res.status(403).json({ error: "No permission to edit" });
+    }
+
+    // Lesen und Schreiben in einer Transaktion, damit sich zwei gleichzeitige
+    // Anfragen nicht gegenseitig den Bestand überschreiben
+    const result = await prisma.$transaction(async (tx) => {
+      const entry = await tx.listEntry.findFirst({
+        where: { name, unit, list, homeId },
+      });
+      // Nicht vorhanden ist kein Fehler - dann gibt es einfach nichts abzuziehen
+      if (!entry) return { status: "not-found" as const, entry: null };
+
+      const remaining = entry.amount - amount;
+      if (remaining <= 0) {
+        await tx.listEntry.delete({ where: { id: entry.id } });
+        return { status: "removed" as const, entry };
+      }
+      const updated = await tx.listEntry.update({
+        where: { id: entry.id },
+        data: { amount: remaining },
+      });
+      return { status: "reduced" as const, entry: updated };
+    });
+
+    res.json(result);
+  },
+);
 
 // Eintrag verschieben (shopping -> pantry)
 listsRouter.patch(

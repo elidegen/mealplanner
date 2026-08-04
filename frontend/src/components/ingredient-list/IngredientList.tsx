@@ -14,6 +14,7 @@ function IngredientList({ ingredients, removeIngredient }: Props) {
         <li className="ingredient" key={index}>
           <p>
             {ingredient.name} {ingredient.amount}
+            {ingredient.unit}
           </p>
           {removeIngredient && (
             <IconClose

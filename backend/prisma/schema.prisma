@@ -53,7 +53,8 @@ model Meal {
 model Ingredient {
   id     Int                @id @default(autoincrement())
   name   String
-  amount String
+  amount Float
+  unit   String
   homeId Int
   mealId Int
   home   Home               @relation(fields: [homeId], references: [id])
@@ -81,7 +82,8 @@ model Tag {
 model ListEntry {
   id     Int                @id @default(autoincrement())
   name   String
-  amount String
+  amount Float
+  unit   String
   homeId Int
   home   Home               @relation(fields: [homeId], references: [id])
   list   String

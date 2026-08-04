@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { IMeal } from "../../types/ListTypes";
+import { ListType, type IMeal } from "../../types/ListTypes";
 import "./Meals.css";
 import { useAuth } from "../../auth/AuthContext";
 import { useHome } from "../../home/HomeContext";
@@ -85,7 +85,8 @@ function Meals() {
             body: JSON.stringify({
               name: ing.name,
               amount: ing.amount,
-              list: "shopping",
+              unit: ing.unit,
+              list: ListType.Shopping,
               homeId: activeHome.id,
             }),
             token,
@@ -138,7 +139,48 @@ function Meals() {
   }
 
   async function cook(meal: IMeal) {
-    console.log("meal", meal);
+    if (!activeHome) {
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: "No home selected",
+        color: "#dc2626",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await Promise.all(
+        meal.ingredients.map((i) =>
+          apiFetch<void>(`/api/lists/reduce-ingredient`, {
+            method: "PATCH",
+            body: JSON.stringify({
+              name: i.name,
+              amount: i.amount,
+              unit: i.unit,
+              list: ListType.Pantry,
+              homeId: activeHome.id,
+            }),
+            token,
+          }),
+        ),
+      );
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: `Cooking successful!`,
+        color: "#16a34a",
+      });
+    } catch (err) {
+      console.log("err", err);
+
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: "Cooking failed!",
+        color: "#dc2626",
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   function closePopup() {

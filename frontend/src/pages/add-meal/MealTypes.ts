@@ -10,7 +10,8 @@ export interface IMeal {
 
 export interface IIngredient {
   name: string;
-  amount: string;
+  amount: number;
+  unit: string;
 }
 
 export interface ITag {

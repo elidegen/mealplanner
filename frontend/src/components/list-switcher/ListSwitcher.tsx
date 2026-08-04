@@ -1,9 +1,10 @@
 import TextButton from "../text-button/TextButton";
+import { ListType } from "../../types/ListTypes";
 import "./ListSwitcher.css";
 
 type Props = {
-  activeList: "shopping" | "pantry";
-  onSwitch: (list: "shopping" | "pantry") => void;
+  activeList: ListType;
+  onSwitch: (list: ListType) => void;
 };
 
 function ListSwitcher({ activeList, onSwitch }: Props) {
@@ -11,13 +12,13 @@ function ListSwitcher({ activeList, onSwitch }: Props) {
     <div className="list-switcher-wrapper">
       <TextButton
         text="Shopping"
-        onClicked={() => onSwitch("shopping")}
-        selected={activeList === "shopping"}
+        onClicked={() => onSwitch(ListType.Shopping)}
+        selected={activeList === ListType.Shopping}
       />
       <TextButton
         text="Pantry"
-        onClicked={() => onSwitch("pantry")}
-        selected={activeList === "pantry"}
+        onClicked={() => onSwitch(ListType.Pantry)}
+        selected={activeList === ListType.Pantry}
       />
     </div>
   );
