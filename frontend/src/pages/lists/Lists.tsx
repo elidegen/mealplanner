@@ -61,8 +61,14 @@ function Lists() {
         }),
       });
       if (!res.ok) throw new Error();
-      const created = (await res.json()) as ListEntry;
-      setEntries((prev) => [...prev, created]);
+      // Gab es die Zutat schon, führt der Server sie zusammen und schickt den
+      // bestehenden Eintrag mit erhöhter Menge zurück — dann ersetzen statt anhängen
+      const saved = (await res.json()) as ListEntry;
+      setEntries((prev) =>
+        prev.some((e) => e.id === saved.id)
+          ? prev.map((e) => (e.id === saved.id ? saved : e))
+          : [...prev, saved],
+      );
     } catch {
       setError("Could not save item");
     }
@@ -86,8 +92,16 @@ function Lists() {
           body: JSON.stringify({ list: ListType.Pantry }),
         });
         if (!res.ok) throw new Error();
+        // Liegt die Zutat in der Pantry schon, verschmelzen beide: removedId ist
+        // dann der abgehakte Eintrag, entry der übrig gebliebene mit voller Menge
+        const { entry: saved, removedId } = (await res.json()) as {
+          entry: ListEntry;
+          removedId: number | null;
+        };
         setEntries((prev) =>
-          prev.map((e) => (e.id === id ? { ...e, list: ListType.Pantry } : e)),
+          prev
+            .filter((e) => e.id !== removedId)
+            .map((e) => (e.id === saved.id ? saved : e)),
         );
       } else {
         const res = await fetch(`/api/lists/${id}`, {

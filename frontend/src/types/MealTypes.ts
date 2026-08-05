@@ -1,4 +1,5 @@
 export interface IMeal {
+  id?: number;
   name: string;
   macros: IMacros | null;
   ingredients: IIngredient[];

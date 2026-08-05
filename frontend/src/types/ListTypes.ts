@@ -1,4 +1,4 @@
-import type { IIngredient, IMacros, ITag } from "./MealTypes";
+import type { IMeal } from "./MealTypes";
 
 export interface IListItem {
   id: string;
@@ -13,17 +13,6 @@ export interface SettingsItem {
   icon?: React.FC;
   name: string;
   link: string;
-}
-
-export interface IMeal {
-  id: number;
-  name: string;
-  ingredients: IIngredient[];
-  calories?: number;
-  macros?: IMacros;
-  portions: number;
-  tags?: ITag[];
-  instructions?: string;
 }
 
 export interface IUser {

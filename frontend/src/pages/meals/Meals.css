@@ -6,7 +6,7 @@
 nav {
   padding: var(--medium-gap);
   display: flex;
-  gap: var(--small-gap);
+  justify-content: space-around;
 }
 
 .listbox {

@@ -3,6 +3,7 @@ import type { Response } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, type AuthRequest } from "../middleware/auth";
 import { isMember, canEdit } from "../services/permissions";
+import { ingredientKey } from "../services/ingredients";
 import { IListEntry } from "../types";
 
 export const listsRouter = Router();
@@ -36,35 +37,35 @@ listsRouter.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
   if (!(await canEdit(req.authData!.userId, homeId))) {
     return res.status(403).json({ error: "No permission to edit" });
   }
-  const entry = await prisma.listEntry.create({
-    data: { name, amount, unit, list, homeId },
+
+  // Gibt es die Zutat in dieser Liste schon, wird nur die Menge erhoeht.
+  // Lesen und Schreiben in einer Transaktion, damit zwei gleichzeitige
+  // Anfragen nicht beide "nicht vorhanden" sehen und doppelt anlegen.
+  const result = await prisma.$transaction(async (tx) => {
+    // SQLite kann in der Query nicht case-insensitiv vergleichen, deshalb
+    // wird die Liste geladen und der Vergleich in JS gemacht
+    const entries = await tx.listEntry.findMany({ where: { homeId, list } });
+    const key = ingredientKey(name, unit);
+    const existing = entries.find(
+      (entry) => ingredientKey(entry.name, entry.unit) === key,
+    );
+
+    if (!existing) {
+      const created = await tx.listEntry.create({
+        data: { name: name.trim(), amount, unit: unit.trim(), list, homeId },
+      });
+      return { entry: created, merged: false };
+    }
+
+    const updated = await tx.listEntry.update({
+      where: { id: existing.id },
+      data: { amount: existing.amount + amount },
+    });
+    return { entry: updated, merged: true };
   });
-  res.status(201).json(entry);
+
+  res.status(result.merged ? 200 : 201).json(result.entry);
 });
-
-// Mehrere Einträge gleichzeitig anlegen
-// listsRouter.post("/shopping", requireAuth, async (req: AuthRequest, res: Response) => {
-//   const payload = req.body as IListEntry[];
-//   payload.forEach(async (el) => {
-//     if (!el.name || !el.homeId || !el.list || !el.amount) {
-//       return res.status(400).json({ error: "Incomplete objects!" });
-//     }
-
-//     if (!(await canEdit(req.authData!.userId, payload[0]!.homeId!))) {
-//       return res.status(403).json({ error: "No permission to edit" });
-//     }
-//     await prisma.listEntry.create({
-//       data: {
-//         name: el.name,
-//         amount: el.amount,
-//         list: el.list,
-//         homeId: el.homeId,
-//       },
-//     });
-//   });
-
-//   res.status(201).json("Listentry successfully created!");
-// });
 
 // Zutat abziehen (z.B. beim Kochen aus der Pantry).
 // Muss VOR "/:id" stehen, sonst schluckt die :id-Route diesen Pfad.
@@ -131,11 +132,38 @@ listsRouter.patch(
     if (!(await canEdit(req.authData!.userId, entry.homeId))) {
       return res.status(403).json({ error: "No permission to edit" });
     }
-    const updated = await prisma.listEntry.update({
-      where: { id },
-      data: { list: list ?? entry.list },
+
+    const targetList = list ?? entry.list;
+
+    // Gibt es die Zutat in der Ziel-Liste schon, wandert nur die Menge dorthin
+    // und der verschobene Eintrag verschwindet - deshalb "removedId" in der
+    // Antwort, damit das Frontend weiss, welche Zeile es entfernen muss.
+    const result = await prisma.$transaction(async (tx) => {
+      const entries = await tx.listEntry.findMany({
+        where: { homeId: entry.homeId, list: targetList },
+      });
+      const key = ingredientKey(entry.name, entry.unit);
+      const twin = entries.find(
+        (e) => e.id !== entry.id && ingredientKey(e.name, e.unit) === key,
+      );
+
+      if (!twin) {
+        const updated = await tx.listEntry.update({
+          where: { id },
+          data: { list: targetList },
+        });
+        return { entry: updated, removedId: null as number | null };
+      }
+
+      const merged = await tx.listEntry.update({
+        where: { id: twin.id },
+        data: { amount: twin.amount + entry.amount },
+      });
+      await tx.listEntry.delete({ where: { id } });
+      return { entry: merged, removedId: id as number | null };
     });
-    res.json(updated);
+
+    res.json(result);
   },
 );
 
