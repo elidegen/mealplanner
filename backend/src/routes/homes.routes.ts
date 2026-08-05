@@ -18,6 +18,7 @@ homesRouter.get("/", requireAuth, async (req: AuthRequest, res: Response) => {
   const memberships = await prisma.homeMembership.findMany({
     where: { userId: req.authData!.userId },
     include: { home: true },
+    orderBy: { lastLogin: "desc" },
   });
   res.json(
     memberships.map((m) => ({
@@ -62,8 +63,7 @@ homesRouter.post(
     if (!code) return res.status(400).json({ error: "Code is required" });
 
     const home = await prisma.home.findFirst({ where: { password: code } });
-    if (!home)
-      return res.status(404).json({ error: "Invalid invite code" });
+    if (!home) return res.status(404).json({ error: "Invalid invite code" });
 
     if (await getRole(req.authData!.userId, home.id)) {
       return res.status(409).json({ error: "You are already a member" });
@@ -124,8 +124,7 @@ homesRouter.patch(
     const target = await prisma.homeMembership.findFirst({
       where: { homeId, userId: targetId },
     });
-    if (!target)
-      return res.status(404).json({ error: "Member not found" });
+    if (!target) return res.status(404).json({ error: "Member not found" });
 
     // Der letzte Admin darf sich nicht selbst degradieren
     if (
@@ -161,16 +160,13 @@ homesRouter.delete(
     }
     // Andere entfernen darf nur ein Admin; austreten darf jeder selbst
     if (!isSelf && myRole !== "admin") {
-      return res
-        .status(403)
-        .json({ error: "Only admins can remove members" });
+      return res.status(403).json({ error: "Only admins can remove members" });
     }
 
     const target = await prisma.homeMembership.findFirst({
       where: { homeId, userId: targetId },
     });
-    if (!target)
-      return res.status(404).json({ error: "Member not found" });
+    if (!target) return res.status(404).json({ error: "Member not found" });
 
     if (target.role === "admin" && (await countAdmins(homeId)) === 1) {
       return res.status(409).json({
@@ -181,6 +177,25 @@ homesRouter.delete(
     }
 
     await prisma.homeMembership.delete({ where: { id: target.id } });
+    res.status(204).send();
+  },
+);
+
+// Markiert ein Home als zuletzt benutzt
+homesRouter.post(
+  "/:id/activate",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    const homeId = Number(req.params.id);
+    // updateMany statt update: (userId, homeId) ist kein Unique-Key,
+    // update bräuchte die Membership-id. Nicht-Mitglied → count 0.
+    const { count } = await prisma.homeMembership.updateMany({
+      where: { userId: req.authData!.userId, homeId },
+      data: { lastLogin: new Date() },
+    });
+    if (count === 0) {
+      return res.status(403).json({ error: "No access to this home" });
+    }
     res.status(204).send();
   },
 );
