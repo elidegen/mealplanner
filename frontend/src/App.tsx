@@ -4,7 +4,6 @@ import Footer from "./components/footer/Footer";
 import Header from "./components/header/Header";
 import AddMeal from "./pages/add-meal/AddMeal";
 import Lists from "./pages/lists/Lists";
-import Calendar from "./pages/calendar/Calendar";
 import Settings from "./pages/settings/Settings";
 import Login from "./pages/login/Login";
 import Users from "./pages/users/Users";
@@ -15,7 +14,6 @@ import Register from "./pages/register/Register";
 import { useAuth } from "./auth/AuthContext";
 import { useHome } from "./home/HomeContext";
 import FirstHome from "./pages/first-home/FirstHome";
-
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
@@ -35,7 +33,6 @@ function AppContent() {
         <Route path="/" element={<AddMeal />} />
         <Route path="/add-meal" element={<AddMeal />} />
         <Route path="/lists" element={<Lists />} />
-        <Route path="/calendar" element={<Calendar />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/users" element={<Users />} />
         <Route path="/meals" element={<Meals />} />

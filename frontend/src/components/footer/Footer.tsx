@@ -1,6 +1,5 @@
 import "./Footer.css";
 import IconList from "../../assets/img/icon_list.svg?react";
-import IconCalendar from "../../assets/img/icon_calendar.svg?react";
 import IconAdd from "../../assets/img/icon_add.svg?react";
 import IconBurger from "../../assets/img/icon_burger.svg?react";
 import IconGear from "../../assets/img/icon_gear.svg?react";
@@ -11,7 +10,11 @@ function Footer() {
   const location = useLocation();
   const { homes } = useHome();
 
-  if (location.pathname === "/login" || location.pathname === "/register" || homes.length === 0) {
+  if (
+    location.pathname === "/login" ||
+    location.pathname === "/register" ||
+    homes.length === 0
+  ) {
     return null;
   }
 
@@ -19,10 +22,6 @@ function Footer() {
     <footer className="navigation">
       <Link className="nav-button" to="/lists">
         <IconList></IconList>
-      </Link>
-
-      <Link className="nav-button" to="/calendar">
-        <IconCalendar></IconCalendar>
       </Link>
 
       <Link className="nav-button" to="/add-meal">
