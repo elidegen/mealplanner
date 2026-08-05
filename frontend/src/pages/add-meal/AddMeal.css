@@ -1,7 +1,7 @@
 .add-meal-page {
   display: flex;
   justify-content: center;
-  padding: var(--medium-gap);
+  padding-top: var(--medium-gap);
 }
 
 form {
@@ -27,7 +27,7 @@ form {
     border-bottom-left-radius: 0;
     border-left-width: 0;
     margin-right: var(--small-gap);
-    width: 100px;
+    width: 110px;
   }
 
   input#tag {
@@ -40,6 +40,19 @@ form {
     border-bottom-right-radius: 0;
     width: 100%;
   }
+}
+
+.input-error {
+  border-color: var(--color-alert);
+}
+
+.error-message {
+  color: var(--color-alert);
+  font-size: 12px;
+}
+
+.ingredient-error {
+  margin-top: -20px;
 }
 
 .ingredient-wrapper input {

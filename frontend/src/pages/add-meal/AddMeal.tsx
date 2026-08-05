@@ -14,8 +14,11 @@ function AddMeal() {
   const { token } = useAuth();
   const { activeHome } = useHome();
   const [name, setName] = useState<string>("");
+  const [nameError, setNameError] = useState<string | null>(null);
   const [ingredients, setIngredients] = useState<IIngredient[]>([]);
+  const [ingredientsError, setIngredientsError] = useState<string | null>(null);
   const [tags, setTags] = useState<ITag[]>([]);
+  const [portions, setPortions] = useState<number>(1);
   const [macros, setMacros] = useState<IMacros | null>(null);
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState<{
@@ -26,6 +29,7 @@ function AddMeal() {
 
   function addIngredient(ingredient: IIngredient) {
     setIngredients((prev) => [...prev, ingredient]);
+    setIngredientsError(null);
   }
 
   function removeIngredient(name: string) {
@@ -44,8 +48,20 @@ function AddMeal() {
     setMacros(macros);
   }
 
+  function updateName(name: string) {
+    setName(name);
+    setNameError(null);
+  }
+
   async function handleSave() {
-    if (!name.trim() || !ingredients.length) return;
+    if (!name.trim()) {
+      setNameError("Name is required!");
+      return;
+    }
+    if (!ingredients.length) {
+      setIngredientsError("Add at least one ingredient!");
+      return;
+    }
     if (!activeHome) {
       setSnackbar({
         id: Date.now(),
@@ -58,7 +74,7 @@ function AddMeal() {
     const meal: IMeal & { homeId: number } = {
       name,
       ingredients,
-      portions: 1,
+      portions: portions ?? 1,
       public: false,
       tags: tags,
       macros: {
@@ -102,17 +118,35 @@ function AddMeal() {
               type="text"
               placeholder="Enter name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              className={nameError ? "input-error" : ""}
+              onChange={(e) => updateName(e.target.value)}
             />
+            {nameError && <span className="error-message">{nameError}</span>}
           </div>
           <TagInput tags={tags} addTag={addTag} removeTag={removeTag} />
           <IngredientInput
             ingredients={ingredients}
             addIngredient={addIngredient}
             removeIngredient={removeIngredient}
+            isError={ingredientsError !== null}
           />
+          {ingredientsError && (
+            <span className="error-message ingredient-error">
+              {ingredientsError}
+            </span>
+          )}
           <MacroInput addMacros={addMacros} />
 
+          <div className="input-wrapper">
+            <label htmlFor="portions">Portions</label>
+            <input
+              id="portions"
+              type="number"
+              placeholder="Enter portions"
+              value={portions}
+              onChange={(e) => setPortions(e.target.valueAsNumber)}
+            />
+          </div>
           <button className="default-button" onClick={handleSave}>
             Save
           </button>

@@ -4,7 +4,7 @@ import "./IngredientList.css";
 
 type Props = {
   ingredients: IIngredient[];
-  removeIngredient: (name: string) => void;
+  removeIngredient?: (name: string) => void;
 };
 
 function IngredientList({ ingredients, removeIngredient }: Props) {
@@ -14,11 +14,14 @@ function IngredientList({ ingredients, removeIngredient }: Props) {
         <li className="ingredient" key={index}>
           <p>
             {ingredient.name} {ingredient.amount}
+            {ingredient.unit}
           </p>
-          <IconClose
-            className="icon-close"
-            onClick={() => removeIngredient(ingredient.name)}
-          />
+          {removeIngredient && (
+            <IconClose
+              className="icon-close"
+              onClick={() => removeIngredient(ingredient.name)}
+            />
+          )}
         </li>
       ))}
     </ul>

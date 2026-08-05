@@ -1,33 +1,33 @@
 import { useState, useEffect } from "react";
 import ListSwitcher from "../../components/list-switcher/ListSwitcher";
 import List from "../../components/list/List";
-import type { IListItem } from "../../types/ListTypes";
+import { ListType, type IListItem } from "../../types/ListTypes";
 import AddToList from "../../components/add-to-list/AddToList";
 import { useAuth } from "../../auth/AuthContext";
 import { useHome } from "../../home/HomeContext";
 import "./Lists.css";
 
-type ListName = "shopping" | "pantry";
-
 type ListEntry = {
   id: number;
   name: string;
-  amount: string;
+  amount: number;
+  unit: string;
   homeId: number;
-  list: ListName;
+  list: ListType;
 };
 
 function Lists() {
   const { token } = useAuth();
   const { activeHome } = useHome();
   const [entries, setEntries] = useState<ListEntry[]>([]);
-  const [activeList, setActiveList] = useState<ListName>("shopping");
+  const [activeList, setActiveList] = useState<ListType>(ListType.Shopping);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   // Einträge des aktiven Homes laden — bei Home-Wechsel erneut
   useEffect(() => {
     if (!activeHome || !token) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(null);
     fetch(`/api/lists?homeId=${activeHome.id}`, {
@@ -54,7 +54,8 @@ function Lists() {
         },
         body: JSON.stringify({
           name: item.name,
-          amount: item.amount ?? "",
+          amount: item.amount,
+          unit: item.unit,
           list: activeList,
           homeId: activeHome.id,
         }),
@@ -75,18 +76,18 @@ function Lists() {
     setError(null);
 
     try {
-      if (entry.list === "shopping") {
+      if (entry.list === ListType.Shopping) {
         const res = await fetch(`/api/lists/${id}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ list: "pantry" }),
+          body: JSON.stringify({ list: ListType.Pantry }),
         });
         if (!res.ok) throw new Error();
         setEntries((prev) =>
-          prev.map((e) => (e.id === id ? { ...e, list: "pantry" } : e)),
+          prev.map((e) => (e.id === id ? { ...e, list: ListType.Pantry } : e)),
         );
       } else {
         const res = await fetch(`/api/lists/${id}`, {
@@ -111,6 +112,7 @@ function Lists() {
       id: String(e.id),
       name: e.name,
       amount: e.amount,
+      unit: e.unit,
       checked: false,
     }));
 

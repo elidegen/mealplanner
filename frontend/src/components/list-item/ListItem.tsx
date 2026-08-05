@@ -18,6 +18,7 @@ function ListItem({ item, propagateChecked }: Props) {
       />
       <p onClick={() => propagateChecked(item)}>
         {item.name} {item.amount}
+        {item.unit}
       </p>
     </li>
   );

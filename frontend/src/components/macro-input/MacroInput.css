@@ -9,6 +9,7 @@
   flex-direction: column;
   width: 50%;
   max-width: 50%;
+  gap: 5px;
 
   input#carbs,
   input#protein {

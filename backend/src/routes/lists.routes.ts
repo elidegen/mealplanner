@@ -3,6 +3,7 @@ import type { Response } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, type AuthRequest } from "../middleware/auth";
 import { isMember, canEdit } from "../services/permissions";
+import { IListEntry } from "../types";
 
 export const listsRouter = Router();
 
@@ -19,25 +20,104 @@ listsRouter.get("/", requireAuth, async (req: AuthRequest, res: Response) => {
 
 // Neuen Eintrag anlegen
 listsRouter.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
-  const { name, amount, list, homeId } = req.body as {
+  const { name, amount, unit, list, homeId } = req.body as {
     name?: string;
-    amount?: string;
+    amount?: number;
+    unit?: string;
     list?: string;
     homeId?: number;
   };
-  if (!name || !homeId || !list) {
+  // amount darf 0 sein und unit ein leerer String ("2 Eier"), deshalb kein truthy-Check
+  if (!name || !homeId || !list || amount === undefined || unit === undefined) {
     return res
       .status(400)
-      .json({ error: "name, list and homeId are required" });
+      .json({ error: "name, list, amount, unit and homeId are required" });
   }
   if (!(await canEdit(req.authData!.userId, homeId))) {
     return res.status(403).json({ error: "No permission to edit" });
   }
   const entry = await prisma.listEntry.create({
-    data: { name, amount: amount ?? "", list, homeId },
+    data: { name, amount, unit, list, homeId },
   });
   res.status(201).json(entry);
 });
+
+// Mehrere Einträge gleichzeitig anlegen
+// listsRouter.post("/shopping", requireAuth, async (req: AuthRequest, res: Response) => {
+//   const payload = req.body as IListEntry[];
+//   payload.forEach(async (el) => {
+//     if (!el.name || !el.homeId || !el.list || !el.amount) {
+//       return res.status(400).json({ error: "Incomplete objects!" });
+//     }
+
+//     if (!(await canEdit(req.authData!.userId, payload[0]!.homeId!))) {
+//       return res.status(403).json({ error: "No permission to edit" });
+//     }
+//     await prisma.listEntry.create({
+//       data: {
+//         name: el.name,
+//         amount: el.amount,
+//         list: el.list,
+//         homeId: el.homeId,
+//       },
+//     });
+//   });
+
+//   res.status(201).json("Listentry successfully created!");
+// });
+
+// Zutat abziehen (z.B. beim Kochen aus der Pantry).
+// Muss VOR "/:id" stehen, sonst schluckt die :id-Route diesen Pfad.
+listsRouter.patch(
+  "/reduce-ingredient",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    const { name, amount, unit, list, homeId } = req.body as {
+      name?: string;
+      amount?: number;
+      unit?: string;
+      list?: string;
+      homeId?: number;
+    };
+    if (
+      !name ||
+      !homeId ||
+      !list ||
+      amount === undefined ||
+      unit === undefined
+    ) {
+      return res
+        .status(400)
+        .json({ error: "name, list, amount, unit and homeId are required" });
+    }
+    if (!(await canEdit(req.authData!.userId, homeId))) {
+      return res.status(403).json({ error: "No permission to edit" });
+    }
+
+    // Lesen und Schreiben in einer Transaktion, damit sich zwei gleichzeitige
+    // Anfragen nicht gegenseitig den Bestand überschreiben
+    const result = await prisma.$transaction(async (tx) => {
+      const entry = await tx.listEntry.findFirst({
+        where: { name, unit, list, homeId },
+      });
+      // Nicht vorhanden ist kein Fehler - dann gibt es einfach nichts abzuziehen
+      if (!entry) return { status: "not-found" as const, entry: null };
+
+      const remaining = entry.amount - amount;
+      if (remaining <= 0) {
+        await tx.listEntry.delete({ where: { id: entry.id } });
+        return { status: "removed" as const, entry };
+      }
+      const updated = await tx.listEntry.update({
+        where: { id: entry.id },
+        data: { amount: remaining },
+      });
+      return { status: "reduced" as const, entry: updated };
+    });
+
+    res.json(result);
+  },
+);
 
 // Eintrag verschieben (shopping -> pantry)
 listsRouter.patch(
@@ -47,12 +127,9 @@ listsRouter.patch(
     const id = Number(req.params.id);
     const { list } = req.body as { list?: string };
     const entry = await prisma.listEntry.findUnique({ where: { id } });
-    if (!entry)
-      return res.status(404).json({ error: "Entry not found" });
+    if (!entry) return res.status(404).json({ error: "Entry not found" });
     if (!(await canEdit(req.authData!.userId, entry.homeId))) {
-      return res
-        .status(403)
-        .json({ error: "No permission to edit" });
+      return res.status(403).json({ error: "No permission to edit" });
     }
     const updated = await prisma.listEntry.update({
       where: { id },
@@ -69,12 +146,9 @@ listsRouter.delete(
   async (req: AuthRequest, res: Response) => {
     const id = Number(req.params.id);
     const entry = await prisma.listEntry.findUnique({ where: { id } });
-    if (!entry)
-      return res.status(404).json({ error: "Entry not found" });
+    if (!entry) return res.status(404).json({ error: "Entry not found" });
     if (!(await canEdit(req.authData!.userId, entry.homeId))) {
-      return res
-        .status(403)
-        .json({ error: "No permission to edit" });
+      return res.status(403).json({ error: "No permission to edit" });
     }
     await prisma.listEntry.delete({ where: { id } });
     res.status(204).send();

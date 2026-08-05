@@ -3,7 +3,8 @@ import type { IIngredient, IMacros, ITag } from "../pages/add-meal/MealTypes";
 export interface IListItem {
   id: string;
   name: string;
-  amount?: string;
+  amount: number;
+  unit: string;
   checked: boolean;
 }
 
@@ -31,3 +32,15 @@ export interface IUser {
   rights: "Admin" | "User";
   img?: string;
 }
+
+export interface IMealPopup {
+  visible: boolean;
+  meal: IMeal;
+}
+
+export const ListType = {
+  Shopping: "shopping",
+  Pantry: "pantry",
+} as const;
+
+export type ListType = (typeof ListType)[keyof typeof ListType];
