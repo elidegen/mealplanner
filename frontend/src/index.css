@@ -58,3 +58,13 @@ body {
   background-color: var(--color-lightgrey1);
   cursor: pointer;
 }
+
+.form-control,
+form input {
+  background-color: var(--color-white);
+  min-height: 30px;
+  padding: 0 var(--small-gap);
+  border-radius: var(--border-radius);
+  border: var(--border-controls);
+  outline: none;
+}

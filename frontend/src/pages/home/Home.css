@@ -18,14 +18,6 @@ form {
   gap: 5px;
 }
 
-form input {
-  min-height: 30px;
-  padding: 0 var(--small-gap);
-  border-radius: var(--border-radius);
-  border: var(--border-controls);
-  outline: none;
-}
-
 select {
   min-height: 30px;
   padding: 0 var(--small-gap);

@@ -1,4 +1,4 @@
-import type { IIngredient, IMacros, ITag } from "../pages/add-meal/MealTypes";
+import type { IIngredient, IMacros, ITag } from "./MealTypes";
 
 export interface IListItem {
   id: string;

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "./AddMeal.css";
-import type { IIngredient, IMacros, IMeal, ITag } from "./MealTypes";
+import type { IIngredient, IMacros, IMeal, ITag } from "../../types/MealTypes";
 import { useAuth } from "../../auth/AuthContext";
 import { useHome } from "../../home/HomeContext";
 import { apiFetch } from "../../auth/api";

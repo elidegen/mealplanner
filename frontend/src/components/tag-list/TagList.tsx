@@ -1,4 +1,4 @@
-import type { ITag } from "../../pages/add-meal/MealTypes";
+import type { ITag } from "../../types/MealTypes";
 import IconClose from "../../assets/img/icon_close.svg?react";
 import "./TagList.css";
 

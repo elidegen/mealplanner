@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ListType, type IMeal } from "../../types/ListTypes";
-import type { ITag } from "../add-meal/MealTypes";
+import type { ITag } from "../../types/MealTypes";
 import "./Meals.css";
 import { useAuth } from "../../auth/AuthContext";
 import { useHome } from "../../home/HomeContext";

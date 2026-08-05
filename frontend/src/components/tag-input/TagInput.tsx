@@ -1,4 +1,4 @@
-import type { ITag } from "../../pages/add-meal/MealTypes";
+import type { ITag } from "../../types/MealTypes";
 import TagList from "../tag-list/TagList";
 import IconAdd from "../../assets/img/icon_add.svg?react";
 import { useState } from "react";
