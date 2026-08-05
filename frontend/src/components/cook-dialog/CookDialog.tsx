@@ -49,7 +49,6 @@ function CookDialog({ vars, functions }: Props) {
             token,
           },
         );
-        console.log("res", res);
 
         setCalcAmount(res.portions);
         setAmount(res.portions);

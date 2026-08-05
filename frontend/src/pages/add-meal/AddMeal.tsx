@@ -112,7 +112,6 @@ function AddMeal() {
       },
       homeId: activeHome.id,
     };
-    console.log(meal);
 
     try {
       await apiFetch("/api/meals", {
@@ -183,11 +182,7 @@ function AddMeal() {
               <span className="error-message">{portionsError}</span>
             )}
           </div>
-          <button
-            className="default-button"
-            type="button"
-            onClick={handleSave}
-          >
+          <button className="default-button" type="button" onClick={handleSave}>
             Save
           </button>
         </form>
