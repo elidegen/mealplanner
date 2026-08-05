@@ -1,4 +1,4 @@
-import type { IMacros } from "../../pages/add-meal/MealTypes";
+import type { IMacros } from "../../types/MealTypes";
 
 type Props = {
   macros: IMacros;

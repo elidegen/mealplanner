@@ -1,12 +1,17 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
 import { useAuth } from "../auth/AuthContext";
-
-type Home = { id: number; name: string; role: string; joinCode?: string };
+import type { IHome } from "../types/HomeTypes";
 
 type HomeContextValue = {
-  homes: Home[];
-  activeHome: Home | null;
-  setActiveHome: (home: Home) => void;
+  homes: IHome[];
+  activeHome: IHome | null;
+  setActiveHome: (home: IHome) => void;
   createHome: (name: string) => Promise<void>;
   joinHome: (code: string) => Promise<void>;
   refreshHomes: () => Promise<void>;
@@ -17,8 +22,8 @@ const HomeContext = createContext<HomeContextValue | null>(null);
 
 export function HomeProvider({ children }: { children: ReactNode }) {
   const { token, logout } = useAuth();
-  const [homes, setHomes] = useState<Home[]>([]);
-  const [activeHome, setActiveHomeState] = useState<Home | null>(null);
+  const [homes, setHomes] = useState<IHome[]>([]);
+  const [activeHome, setActiveHomeState] = useState<IHome | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Lädt die Homes neu. Das aktive Home bleibt erhalten, bekommt aber seine
@@ -39,7 +44,7 @@ export function HomeProvider({ children }: { children: ReactNode }) {
         return;
       }
       if (!res.ok) throw new Error();
-      const data = (await res.json()) as Home[];
+      const data = (await res.json()) as IHome[];
       setHomes(data);
       setActiveHomeState((current) => {
         const still = current ? data.find((h) => h.id === current.id) : null;
@@ -57,18 +62,21 @@ export function HomeProvider({ children }: { children: ReactNode }) {
     refreshHomes();
   }, [token]);
 
-  function setActiveHome(home: Home) {
+  function setActiveHome(home: IHome) {
     setActiveHomeState(home);
   }
 
   async function createHome(name: string) {
     const res = await fetch("/api/homes", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({ name }),
     });
     if (!res.ok) throw new Error("Could not create home");
-    const home = await res.json() as Home;
+    const home = (await res.json()) as IHome;
     const newHome = { ...home, role: "admin" };
     setHomes((prev) => [...prev, newHome]);
     setActiveHome(newHome);
@@ -77,21 +85,34 @@ export function HomeProvider({ children }: { children: ReactNode }) {
   async function joinHome(code: string) {
     const res = await fetch("/api/homes/join", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({ code }),
     });
     if (!res.ok) {
       // Das Backend liefert eine konkrete Meldung (falscher Code, schon Mitglied)
-      const data = await res.json().catch(() => ({})) as { error?: string };
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
       throw new Error(data.error ?? "Could not join home");
     }
-    const home = await res.json() as Home;
+    const home = (await res.json()) as IHome;
     setHomes((prev) => [...prev, home]);
     setActiveHome(home);
   }
 
   return (
-    <HomeContext.Provider value={{ homes, activeHome, setActiveHome, createHome, joinHome, refreshHomes, loading }}>
+    <HomeContext.Provider
+      value={{
+        homes,
+        activeHome,
+        setActiveHome,
+        createHome,
+        joinHome,
+        refreshHomes,
+        loading,
+      }}
+    >
       {children}
     </HomeContext.Provider>
   );

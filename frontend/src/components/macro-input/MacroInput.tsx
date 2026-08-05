@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { IMacros } from "../../pages/add-meal/MealTypes";
+import type { IMacros } from "../../types/MealTypes";
 import IconCalc from "../../assets/img/icon_calculate.svg?react";
 import "./MacroInput.css";
 

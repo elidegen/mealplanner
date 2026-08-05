@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { IIngredient } from "../../pages/add-meal/MealTypes";
+import type { IIngredient } from "../../types/MealTypes";
 import IngredientList from "../ingredient-list/IngredientList";
 import IconAdd from "../../assets/img/icon_add.svg?react";
 import { extractAmountUnit } from "../../helper/meal.helper";

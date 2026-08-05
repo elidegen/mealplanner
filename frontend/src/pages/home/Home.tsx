@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./Home.css";
 import { useHome } from "../../home/HomeContext";
 import TextButton from "../../components/text-button/TextButton";
+import Dropdown from "../../components/dropdown/Dropdown";
 
 function Home() {
   const { homes, activeHome, setActiveHome, createHome, joinHome } = useHome();
@@ -13,7 +14,10 @@ function Home() {
   const [joining, setJoining] = useState(false);
 
   async function handleCreate() {
-    if (name.trim() === "") { setError("Please enter a name"); return; }
+    if (name.trim() === "") {
+      setError("Please enter a name");
+      return;
+    }
     setLoading(true);
     try {
       await createHome(name);
@@ -46,7 +50,7 @@ function Home() {
   return (
     <div className="home-page">
       <form>
-        <div className="input-wrapper">
+        {/* <div className="input-wrapper">
           <label htmlFor="homes">Select your home</label>
           <select
             id="homes"
@@ -62,7 +66,13 @@ function Home() {
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
+        <Dropdown
+          activeHome={activeHome}
+          homes={homes}
+          setActiveHome={setActiveHome}
+          labelText={"Select your home"}
+        />
         {activeHome?.joinCode && (
           <div className="input-wrapper">
             <label>Invite code for “{activeHome.name}”</label>
@@ -82,7 +92,11 @@ function Home() {
             onChange={(e) => setName(e.target.value)}
           />
           {error && <p className="form-error">{error}</p>}
-          <TextButton text="Create" onClicked={handleCreate} disabled={loading} />
+          <TextButton
+            text="Create"
+            onClicked={handleCreate}
+            disabled={loading}
+          />
         </div>
 
         <div className="input-wrapper">

@@ -1,5 +1,5 @@
 import IconClose from "../../assets/img/icon_close.svg?react";
-import type { IIngredient } from "../../pages/add-meal/MealTypes";
+import type { IIngredient } from "../../types/MealTypes";
 import "./IngredientList.css";
 
 type Props = {

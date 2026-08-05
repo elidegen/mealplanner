@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import TagList from "../tag-list/TagList";
-import type { ITag } from "../../pages/add-meal/MealTypes";
+import type { ITag } from "../../types/MealTypes";
 import LoadingSpinner from "../loading-spinner/LoadingSpinner";
 import { apiFetch } from "../../auth/api";
 import { useAuth } from "../../auth/AuthContext";

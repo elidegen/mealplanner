@@ -1,5 +1,5 @@
 import type { Tab } from "../../pages/meals/Meals";
-import type { ITag } from "../../pages/add-meal/MealTypes";
+import type { ITag } from "../../types/MealTypes";
 import IconFilter from "../../assets/img/icon_filter.svg?react";
 import FilterPanel from "../filter-panel/FilterPanel";
 import "./MealsBar.css";
