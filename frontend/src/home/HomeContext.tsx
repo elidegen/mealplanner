@@ -64,6 +64,10 @@ export function HomeProvider({ children }: { children: ReactNode }) {
 
   function setActiveHome(home: IHome) {
     setActiveHomeState(home);
+    fetch(`/api/homes/${home.id}/activate`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    }).catch(() => {});
   }
 
   async function createHome(name: string) {
