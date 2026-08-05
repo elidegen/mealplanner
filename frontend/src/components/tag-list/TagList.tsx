@@ -29,21 +29,23 @@ function TagList({ tags, removeTag, selected, updateSelected }: Props) {
 
   return (
     <div className="tag-wrapper">
-      {tags.map((tag) => (
-        <div
-          className={getClassName(tag.name)}
-          key={tag.name}
-          onClick={() => handleSelectTag(tag)}
-        >
-          <p>{tag.name}</p>
-          {removeTag && (
-            <IconClose
-              className="icon-close"
-              onClick={() => removeTag(tag.name)}
-            />
-          )}
-        </div>
-      ))}
+      {!tags.length && updateSelected && <p>No tags available</p>}
+      {!!tags.length &&
+        tags.map((tag) => (
+          <div
+            className={getClassName(tag.name)}
+            key={tag.name}
+            onClick={() => handleSelectTag(tag)}
+          >
+            <p>{tag.name}</p>
+            {removeTag && (
+              <IconClose
+                className="icon-close"
+                onClick={() => removeTag(tag.name)}
+              />
+            )}
+          </div>
+        ))}
     </div>
   );
 }

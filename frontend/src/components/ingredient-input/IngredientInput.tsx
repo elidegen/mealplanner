@@ -7,7 +7,7 @@ import { extractAmountUnit } from "../../helper/meal.helper";
 type Props = {
   ingredients: IIngredient[];
   addIngredient: (ingredient: IIngredient) => void;
-  removeIngredient: (name: string) => void;
+  removeIngredient: (name: string, unit: string) => void;
   isError: boolean;
 };
 

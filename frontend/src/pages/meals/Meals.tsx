@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { ListType, type IMeal } from "../../types/ListTypes";
-import type { ITag } from "../../types/MealTypes";
+import { ListType } from "../../types/ListTypes";
+import type { IMeal, ITag } from "../../types/MealTypes";
 import "./Meals.css";
 import { useAuth } from "../../auth/AuthContext";
 import { useHome } from "../../home/HomeContext";
@@ -10,6 +10,8 @@ import Snackbar from "../../components/snackbar/Snackbar";
 import MealCard from "../../components/meal-card/MealCard";
 import MealCardPopup from "../../components/meal-card-popup/MealCardPopup";
 import MealsBar from "../../components/meals-bar/MealsBar";
+import CookDialog from "../../components/cook-dialog/CookDialog";
+import AddToListDialog from "../../components/add-to-list-dialog/AddToListDialog";
 
 export type Tab = "Recipes" | "MealBrowser";
 
@@ -22,6 +24,11 @@ function Meals() {
   const { activeHome } = useHome();
   const [activeTab, setActiveTab] = useState<Tab>("Recipes");
   const [meals, setMeals] = useState<IMeal[]>([]);
+  const [mealToCook, setMealToCook] = useState<IMeal | null>(null);
+  const [cookDialogOpen, setCookDialogOpen] = useState<boolean>(false);
+  const [mealToAdd, setMealToAdd] = useState<IMeal | null>(null);
+  const [addToListDialogOpen, setAddToListDialogOpen] =
+    useState<boolean>(false);
   const [selectedTags, setSelectedTags] = useState<ITag[]>([]);
   const [mealPopup, setMealPopup] = useState<{
     visible: boolean;
@@ -76,7 +83,7 @@ function Meals() {
     setActiveTab(tab);
   }
 
-  async function addToList(meal: IMeal) {
+  async function addToList(meal: IMeal, portions: number) {
     if (!activeHome) {
       setSnackbar({
         id: ++snackbarId.current,
@@ -87,6 +94,10 @@ function Meals() {
     }
     if (meal.ingredients.length === 0) return;
 
+    // Die Rezeptmengen gelten fuer meal.portions, deshalb auf die
+    // gewuenschte Portionszahl hochrechnen
+    const factor = portions / (meal.portions > 0 ? meal.portions : 1);
+
     setLoading(true);
     try {
       await Promise.all(
@@ -95,7 +106,9 @@ function Meals() {
             method: "POST",
             body: JSON.stringify({
               name: ing.name,
-              amount: ing.amount,
+              // Gerundet, damit auf der Einkaufsliste keine Werte wie
+              // 133.33333333333334 g landen
+              amount: Math.round(ing.amount * factor * 100) / 100,
               unit: ing.unit,
               list: ListType.Shopping,
               homeId: activeHome.id,
@@ -110,6 +123,8 @@ function Meals() {
         text: `${count} ${count === 1 ? "ingredient" : "ingredients"} added to shopping list`,
         color: "#16a34a",
       });
+      setAddToListDialogOpen(false);
+      setMealPopup({ visible: false, meal: null });
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Could not add to shopping list";
@@ -136,6 +151,7 @@ function Meals() {
         text: "Meal deleted",
         color: "#16a34a",
       });
+      setMealPopup({ visible: false, meal: null });
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Deleting meal failed";
@@ -149,7 +165,19 @@ function Meals() {
     }
   }
 
-  async function cook(meal: IMeal) {
+  function openCookDialog(meal: IMeal) {
+    if (!meal) return;
+    setMealToCook(meal);
+    setCookDialogOpen(true);
+  }
+
+  function openAddToListDialog(meal: IMeal) {
+    if (!meal) return;
+    setMealToAdd(meal);
+    setAddToListDialogOpen(true);
+  }
+
+  async function cook(meal: IMeal, portions: number) {
     if (!activeHome) {
       setSnackbar({
         id: ++snackbarId.current,
@@ -161,32 +189,27 @@ function Meals() {
 
     setLoading(true);
     try {
-      await Promise.all(
-        meal.ingredients.map((i) =>
-          apiFetch<void>(`/api/lists/reduce-ingredient`, {
-            method: "PATCH",
-            body: JSON.stringify({
-              name: i.name,
-              amount: i.amount,
-              unit: i.unit,
-              list: ListType.Pantry,
-              homeId: activeHome.id,
-            }),
-            token,
-          }),
-        ),
-      );
+      // Das Backend skaliert die Zutaten selbst und zieht sie in einer
+      // Transaktion ab, damit der Vorrat nicht halb verbucht stehen bleibt
+      await apiFetch<{ portions: number }>(`/api/meals/${meal.id}/cook`, {
+        method: "POST",
+        body: JSON.stringify({
+          portions,
+          homeId: activeHome.id,
+        }),
+        token,
+      });
       setSnackbar({
         id: ++snackbarId.current,
-        text: `Cooking successful!`,
+        text: `Cooked ${portions} ${portions === 1 ? "portion" : "portions"}!`,
         color: "#16a34a",
       });
+      setCookDialogOpen(false);
     } catch (err) {
-      console.log("err", err);
-
+      const message = err instanceof Error ? err.message : "Cooking failed!";
       setSnackbar({
         id: ++snackbarId.current,
-        text: "Cooking failed!",
+        text: message,
         color: "#dc2626",
       });
     } finally {
@@ -196,6 +219,16 @@ function Meals() {
 
   function closePopup() {
     setMealPopup({ visible: false, meal: null });
+  }
+
+  function closeCookDialog() {
+    setCookDialogOpen(false);
+    setMealToCook(null);
+  }
+
+  function closeAddToListDialog() {
+    setAddToListDialogOpen(false);
+    setMealToAdd(null);
   }
 
   function openPopup(meal: IMeal) {
@@ -228,8 +261,25 @@ function Meals() {
       )}
       <MealCardPopup
         mealPopup={mealPopup}
-        functions={{ closePopup, addToList, deleteMeal, cook }}
+        functions={{
+          closePopup,
+          openAddToListDialog,
+          deleteMeal,
+          openCookDialog,
+        }}
       />
+      {cookDialogOpen && mealToCook && (
+        <CookDialog
+          functions={{ cook, closeCookDialog }}
+          vars={{ mealToCook, cookDialogOpen }}
+        />
+      )}
+      {addToListDialogOpen && mealToAdd && (
+        <AddToListDialog
+          functions={{ addToList, closeAddToListDialog }}
+          vars={{ mealToAdd, addToListDialogOpen }}
+        />
+      )}
     </>
   );
 }

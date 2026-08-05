@@ -9,6 +9,7 @@ import Snackbar from "../../components/snackbar/Snackbar";
 import MacroInput from "../../components/macro-input/MacroInput";
 import IngredientInput from "../../components/ingredient-input/IngredientInput";
 import TagInput from "../../components/tag-input/TagInput";
+import { addOrMergeIngredient, ingredientKey } from "../../helper/meal.helper";
 
 function AddMeal() {
   const { token } = useAuth();
@@ -18,8 +19,13 @@ function AddMeal() {
   const [ingredients, setIngredients] = useState<IIngredient[]>([]);
   const [ingredientsError, setIngredientsError] = useState<string | null>(null);
   const [tags, setTags] = useState<ITag[]>([]);
-  const [portions, setPortions] = useState<number>(1);
+  // Leeres Zahlenfeld liefert NaN, deshalb null statt einer Zahl
+  const [portions, setPortions] = useState<number | null>(1);
+  const [portionsError, setPortionsError] = useState<string | null>(null);
   const [macros, setMacros] = useState<IMacros | null>(null);
+  // MacroInput haelt seine Werte intern, deshalb wird es ueber einen neuen
+  // key remountet statt zurueckgesetzt
+  const [macroKey, setMacroKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState<{
     id: number;
@@ -27,13 +33,21 @@ function AddMeal() {
     color: string;
   } | null>(null);
 
+  // Gibt es die Zutat mit derselben Einheit schon, wächst dort nur die Menge —
+  // die Liste zeigt die Änderung sofort
   function addIngredient(ingredient: IIngredient) {
-    setIngredients((prev) => [...prev, ingredient]);
+    setIngredients((prev) => addOrMergeIngredient(prev, ingredient));
     setIngredientsError(null);
   }
 
-  function removeIngredient(name: string) {
-    setIngredients((prev) => prev.filter((ing) => ing.name !== name));
+  // Über denselben Schlüssel wie beim Hinzufügen, damit genau der Eintrag
+  // verschwindet, auf dessen X geklickt wurde — und nicht die gleichnamige
+  // Zutat mit anderer Einheit
+  function removeIngredient(name: string, unit: string) {
+    const key = ingredientKey(name, unit);
+    setIngredients((prev) =>
+      prev.filter((ing) => ingredientKey(ing.name, ing.unit) !== key),
+    );
   }
 
   function addTag(tag: ITag) {
@@ -53,6 +67,11 @@ function AddMeal() {
     setNameError(null);
   }
 
+  function updatePortions(portions: number) {
+    setPortions(Number.isNaN(portions) ? null : portions);
+    setPortionsError(null);
+  }
+
   async function handleSave() {
     if (!name.trim()) {
       setNameError("Name is required!");
@@ -60,6 +79,14 @@ function AddMeal() {
     }
     if (!ingredients.length) {
       setIngredientsError("Add at least one ingredient!");
+      return;
+    }
+    if (portions === null) {
+      setPortionsError("Portions are required!");
+      return;
+    }
+    if (portions <= 0) {
+      setPortionsError("Portions must be greater than 0!");
       return;
     }
     if (!activeHome) {
@@ -74,7 +101,7 @@ function AddMeal() {
     const meal: IMeal & { homeId: number } = {
       name,
       ingredients,
-      portions: portions ?? 1,
+      portions,
       public: false,
       tags: tags,
       macros: {
@@ -94,6 +121,10 @@ function AddMeal() {
       });
       setName("");
       setIngredients([]);
+      setTags([]);
+      setPortions(1);
+      setMacros(null);
+      setMacroKey((prev) => prev + 1);
       setSnackbar({
         id: Date.now(),
         text: "Meal saved successfully!",
@@ -135,7 +166,7 @@ function AddMeal() {
               {ingredientsError}
             </span>
           )}
-          <MacroInput addMacros={addMacros} />
+          <MacroInput key={macroKey} addMacros={addMacros} />
 
           <div className="input-wrapper">
             <label htmlFor="portions">Portions</label>
@@ -143,11 +174,15 @@ function AddMeal() {
               id="portions"
               type="number"
               placeholder="Enter portions"
-              value={portions}
-              onChange={(e) => setPortions(e.target.valueAsNumber)}
+              className={portionsError ? "input-error" : ""}
+              value={portions ?? ""}
+              onChange={(e) => updatePortions(e.target.valueAsNumber)}
             />
+            {portionsError && (
+              <span className="error-message">{portionsError}</span>
+            )}
           </div>
-          <button className="default-button" onClick={handleSave}>
+          <button className="default-button" type="button" onClick={handleSave}>
             Save
           </button>
         </form>

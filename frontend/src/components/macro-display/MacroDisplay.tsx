@@ -9,12 +9,12 @@ function MacroDisplay({ macros }: Props) {
     <>
       <div className="macro-wrapper">
         <div className="sec-wrapper">
-          <p>Carbs: {macros.carbs}</p>
-          <p>Fat: {macros.fat}</p>
+          <p>Carbs: {macros.carbs ?? "-"}</p>
+          <p>Fat: {macros.fat ?? "-"}</p>
         </div>
         <div className="sec-wrapper">
-          <p>Proteins: {macros.proteins}</p>
-          <p>Calories: {macros.calories}</p>
+          <p>Proteins: {macros.proteins ?? "-"}</p>
+          <p>Calories: {macros.calories ?? "-"}</p>
         </div>
       </div>
     </>

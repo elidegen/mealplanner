@@ -4,7 +4,9 @@ import "./IngredientList.css";
 
 type Props = {
   ingredients: IIngredient[];
-  removeIngredient?: (name: string) => void;
+  // Name allein identifiziert eine Zutat nicht — "Mehl 500 g" und "Mehl 1 kg"
+  // stehen als zwei Einträge in der Liste
+  removeIngredient?: (name: string, unit: string) => void;
 };
 
 function IngredientList({ ingredients, removeIngredient }: Props) {
@@ -19,7 +21,9 @@ function IngredientList({ ingredients, removeIngredient }: Props) {
           {removeIngredient && (
             <IconClose
               className="icon-close"
-              onClick={() => removeIngredient(ingredient.name)}
+              onClick={() =>
+                removeIngredient(ingredient.name, ingredient.unit)
+              }
             />
           )}
         </li>

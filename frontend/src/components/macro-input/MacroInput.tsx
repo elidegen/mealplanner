@@ -13,34 +13,46 @@ function MacroInput({ addMacros }: Props) {
   const [fat, setFat] = useState<number | null>(null);
   const [calories, setCalories] = useState<number | null>(null);
 
-  function updateMacros() {
-    addMacros({ proteins, carbs, fat, calories });
+  // Der frisch geaenderte Wert muss explizit uebergeben werden: die State-
+  // Variablen hier stammen aus dem laufenden Render und kennen das gerade
+  // geplante set...() noch nicht
+  function updateMacros(next: Partial<IMacros>) {
+    addMacros({ proteins, carbs, fat, calories, ...next });
+  }
+
+  // Ein leeres Zahlenfeld liefert NaN, was beim Speichern still zu null wird
+  function toValue(input: number) {
+    return Number.isNaN(input) ? null : input;
   }
 
   function calcCalories() {
-    const calories = (proteins ?? 0) * 4 + (carbs ?? 0) * 4 + (fat ?? 0) * 9;
-    setCalories(calories);
-    updateMacros();
+    const calculated = (proteins ?? 0) * 4 + (carbs ?? 0) * 4 + (fat ?? 0) * 9;
+    setCalories(calculated);
+    updateMacros({ calories: calculated });
   }
 
   function updateCarbs(c: number) {
-    setCarbs(c);
-    updateMacros();
+    const value = toValue(c);
+    setCarbs(value);
+    updateMacros({ carbs: value });
   }
 
   function updateProteins(p: number) {
-    setProteins(p);
-    updateMacros();
+    const value = toValue(p);
+    setProteins(value);
+    updateMacros({ proteins: value });
   }
 
   function updateFat(f: number) {
-    setFat(f);
-    updateMacros();
+    const value = toValue(f);
+    setFat(value);
+    updateMacros({ fat: value });
   }
 
   function updateCalories(c: number) {
-    setCalories(c);
-    addMacros({ proteins, carbs, fat, calories });
+    const value = toValue(c);
+    setCalories(value);
+    updateMacros({ calories: value });
   }
 
   return (
@@ -82,7 +94,11 @@ function MacroInput({ addMacros }: Props) {
               value={calories ?? ""}
               onChange={(e) => updateCalories(e.target.valueAsNumber)}
             />
-            <button className="calc-button icon-button" onClick={calcCalories}>
+            <button
+              className="calc-button icon-button"
+              type="button"
+              onClick={calcCalories}
+            >
               <IconCalc />
             </button>
           </div>

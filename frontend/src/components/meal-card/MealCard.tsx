@@ -1,5 +1,5 @@
 import IconInfo from "../../assets/img/icon_info.svg?react";
-import type { IMeal } from "../../types/ListTypes";
+import type { IMeal } from "../../types/MealTypes";
 import TagList from "../tag-list/TagList";
 
 type Props = {
@@ -15,14 +15,6 @@ function MealCard({ meal, openPopup }: Props) {
         {meal.tags && <TagList tags={meal.tags} />}
       </div>
       <div className="button-wrapper">
-        {/* <button
-          className="nav-button"
-          type="button"
-          onClick={() => addToList(meal)}
-        >
-          <IconListAdd />
-        </button> */}
-
         <button
           className="nav-button"
           type="button"

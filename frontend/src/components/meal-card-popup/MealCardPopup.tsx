@@ -1,4 +1,3 @@
-import type { IMeal } from "../../types/ListTypes";
 import IconListAdd from "../../assets/img/icon_list_add.svg?react";
 import IconTrash from "../../assets/img/icon_trash.svg?react";
 import IconClose from "../../assets/img/icon_close.svg?react";
@@ -7,14 +6,15 @@ import TagList from "../tag-list/TagList";
 import "./MealCardPopup.css";
 import IngredientList from "../ingredient-list/IngredientList";
 import MacroDisplay from "../macro-display/MacroDisplay";
+import type { IMeal } from "../../types/MealTypes";
 
 type Props = {
   mealPopup: { visible: boolean; meal: IMeal | null };
   functions: {
     closePopup: () => void;
-    addToList: (meal: IMeal) => void;
+    openAddToListDialog: (meal: IMeal) => void;
     deleteMeal: (meal: IMeal) => void;
-    cook: (meal: IMeal) => void;
+    openCookDialog: (meal: IMeal) => void;
   };
 };
 
@@ -35,7 +35,7 @@ function MealCardPopup({ mealPopup, functions }: Props) {
 
   return (
     <div className="popup-overlay" onClick={() => functions.closePopup()}>
-      <div key={meal.id} className="meal-popup">
+      <div key={meal.id} className="popup" onClick={(e) => e.stopPropagation()}>
         <div className="content-wrapper">
           <div>
             <h2>{meal.name}</h2>
@@ -61,14 +61,14 @@ function MealCardPopup({ mealPopup, functions }: Props) {
           <button
             className="nav-button"
             type="button"
-            onClick={() => functions.addToList(meal)}
+            onClick={() => functions.openAddToListDialog(meal)}
           >
             <IconListAdd />
           </button>
           <button
             className="nav-button"
             type="button"
-            onClick={() => functions.cook(meal)}
+            onClick={() => functions.openCookDialog(meal)}
           >
             <IconCookpot />
           </button>
