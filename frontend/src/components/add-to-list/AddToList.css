@@ -7,7 +7,7 @@
   grid-template-columns: 3fr 2fr 1fr;
   gap: var(--small-gap);
   padding: var(--small-gap) var(--medium-gap);
-  background-color: #c8dff7;
+  background-color: var(--color-background);
   box-shadow: 0 -2px 12px rgba(26, 111, 212, 0.15);
   z-index: 9;
 

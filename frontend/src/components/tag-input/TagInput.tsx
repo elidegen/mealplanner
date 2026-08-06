@@ -36,7 +36,7 @@ function TagInput({ tags, addTag, removeTag }: Props) {
           <IconAdd />
         </button>
       </div>
-      {tags.length > 0 && <TagList tags={tags} removeTag={removeTag} />}
+      {tags?.length > 0 && <TagList tags={tags} removeTag={removeTag} />}
     </div>
   );
 }

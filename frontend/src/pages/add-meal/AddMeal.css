@@ -1,7 +1,7 @@
 .add-meal-page {
   display: flex;
   justify-content: center;
-  padding-top: var(--medium-gap);
+  padding: var(--medium-gap) 0;
 }
 
 form {
@@ -49,6 +49,15 @@ form {
 .error-message {
   color: var(--color-alert);
   font-size: 12px;
+}
+
+/* Ladefehler ersetzt die komplette Form, deshalb eigene Ausrichtung */
+.load-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--medium-gap);
+  color: var(--color-alert);
 }
 
 .ingredient-error {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./AddMeal.css";
 import type { IIngredient, IMacros, IMeal, ITag } from "../../types/MealTypes";
 import { useAuth } from "../../auth/AuthContext";
@@ -10,8 +10,12 @@ import MacroInput from "../../components/macro-input/MacroInput";
 import IngredientInput from "../../components/ingredient-input/IngredientInput";
 import TagInput from "../../components/tag-input/TagInput";
 import { addOrMergeIngredient, ingredientKey } from "../../helper/meal.helper";
+import { useNavigate, useParams } from "react-router-dom";
 
 function AddMeal() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const editMode = id ? true : false;
   const { token } = useAuth();
   const { activeHome } = useHome();
   const [name, setName] = useState<string>("");
@@ -23,15 +27,58 @@ function AddMeal() {
   const [portions, setPortions] = useState<number | null>(1);
   const [portionsError, setPortionsError] = useState<string | null>(null);
   const [macros, setMacros] = useState<IMacros | null>(null);
-  // MacroInput haelt seine Werte intern, deshalb wird es ueber einen neuen
-  // key remountet statt zurueckgesetzt
-  const [macroKey, setMacroKey] = useState(0);
   const [loading, setLoading] = useState(false);
+  // Laesst sich das Meal nicht laden, gibt es nichts zu bearbeiten - dann
+  // ersetzt eine Meldung die Form, statt einen Save-Button anzubieten,
+  // der zwangslaeufig in denselben Fehler laeuft
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState<{
     id: number;
     text: string;
     color: string;
   } | null>(null);
+  const snackbarId = useRef(0);
+
+  function prefill(meal: IMeal) {
+    setName(meal.name);
+    setIngredients(meal.ingredients);
+    setTags(meal.tags);
+    setPortions(meal.portions);
+    setMacros(meal.macros);
+  }
+
+  function resetForm() {
+    setName("");
+    setIngredients([]);
+    setTags([]);
+    setPortions(1);
+    setMacros(null);
+  }
+
+  useEffect(() => {
+    if (!editMode || !activeHome) return;
+    async function init() {
+      setLoading(true);
+      try {
+        const meal = await apiFetch(
+          `/api/meals/${id}?homeId=${activeHome?.id}`,
+          {
+            method: "GET",
+            token,
+          },
+        );
+        prefill(meal as IMeal);
+      } catch (err) {
+        setLoadError(
+          err instanceof Error ? err.message : "Failed to load meal",
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    init();
+  }, [activeHome, editMode, id, token]);
 
   // Gibt es die Zutat mit derselben Einheit schon, wächst dort nur die Menge —
   // die Liste zeigt die Änderung sofort
@@ -91,7 +138,7 @@ function AddMeal() {
     }
     if (!activeHome) {
       setSnackbar({
-        id: Date.now(),
+        id: ++snackbarId.current,
         text: "No home selected",
         color: "#dc2626",
       });
@@ -113,20 +160,46 @@ function AddMeal() {
       homeId: activeHome.id,
     };
 
+    if (editMode) {
+      updateMeal(meal);
+    } else {
+      saveMeal(meal);
+    }
+  }
+
+  async function updateMeal(meal: IMeal) {
+    try {
+      await apiFetch(`/api/meals/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(meal),
+        token,
+      });
+      // Anders als beim Anlegen bleiben die Werte stehen: der User bearbeitet
+      // dasselbe Meal weiter und sieht, was gespeichert wurde
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: "Meal updated successfully!",
+        color: "#16a34a",
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Error while updated";
+      setSnackbar({ id: Date.now(), text: message, color: "#dc2626" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function saveMeal(meal: IMeal) {
     try {
       await apiFetch("/api/meals", {
         method: "POST",
         body: JSON.stringify(meal),
         token,
       });
-      setName("");
-      setIngredients([]);
-      setTags([]);
-      setPortions(1);
-      setMacros(null);
-      setMacroKey((prev) => prev + 1);
+      resetForm();
       setSnackbar({
-        id: Date.now(),
+        id: ++snackbarId.current,
         text: "Meal saved successfully!",
         color: "#16a34a",
       });
@@ -136,6 +209,23 @@ function AddMeal() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (loadError) {
+    return (
+      <div className="add-meal-page">
+        <div className="load-error">
+          <p>{loadError}</p>
+          <button
+            className="default-button"
+            type="button"
+            onClick={() => navigate("/meals")}
+          >
+            Back to meals
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -166,7 +256,7 @@ function AddMeal() {
               {ingredientsError}
             </span>
           )}
-          <MacroInput key={macroKey} addMacros={addMacros} />
+          <MacroInput macros={macros} addMacros={addMacros} />
 
           <div className="input-wrapper">
             <label htmlFor="portions">Portions</label>
@@ -200,4 +290,12 @@ function AddMeal() {
   );
 }
 
-export default AddMeal;
+// /add-meal und /add-meal/:id rendern denselben Komponententyp an derselben
+// Stelle im Baum - ohne key wuerde React die Instanz samt State weiterverwenden
+// und beim Wechsel die Felder des zuletzt geladenen Meals stehen lassen
+function AddMealPage() {
+  const { id } = useParams();
+  return <AddMeal key={id ?? "new"} />;
+}
+
+export default AddMealPage;

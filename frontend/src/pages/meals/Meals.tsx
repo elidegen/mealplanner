@@ -83,6 +83,8 @@ function Meals() {
     setActiveTab(tab);
   }
 
+  function togglePublic(meal: IMeal) {}
+
   async function addToList(meal: IMeal, portions: number) {
     if (!activeHome) {
       setSnackbar({
@@ -266,6 +268,7 @@ function Meals() {
           openAddToListDialog,
           deleteMeal,
           openCookDialog,
+          togglePublic,
         }}
       />
       {cookDialogOpen && mealToCook && (
