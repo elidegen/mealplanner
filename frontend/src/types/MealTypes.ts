@@ -1,5 +1,7 @@
 export interface IMeal {
   id?: number;
+  // Kommt nur vom Backend zurueck; im Meal Browser stehen hier fremde Homes
+  homeId?: number;
   name: string;
   macros: IMacros | null;
   ingredients: IIngredient[];

@@ -15,10 +15,6 @@ import AddToListDialog from "../../components/add-to-list-dialog/AddToListDialog
 
 export type Tab = "Recipes" | "MealBrowser";
 
-const RECIPES: IMeal[] = [];
-
-const MEAL_BROWSER: IMeal[] = [];
-
 function Meals() {
   const { token } = useAuth();
   const { activeHome } = useHome();
@@ -45,26 +41,30 @@ function Meals() {
   } | null>(null);
   const snackbarId = useRef(0);
 
-  const list =
-    meals.length > 0 ? meals : activeTab === "Recipes" ? RECIPES : MEAL_BROWSER;
-
   useEffect(() => {
-    if (!activeHome) return;
+    // Als const, damit die Verengung auch in loadMeals gilt - bei
+    // activeHome?.id direkt wuerde TypeScript sie in der Closure verwerfen
+    const isRecipes = activeTab === "Recipes";
+    const homeId = activeHome?.id;
+    if (isRecipes && !homeId) return;
+
     async function loadMeals() {
       setLoading(true);
       try {
         // ergibt homeId=1&tags=vegan&tags=schnell
-        const params = new URLSearchParams({ homeId: String(activeHome!.id) });
+        const params = new URLSearchParams();
+        // Recipes zeigt nur das eigene Home, der Meal Browser dagegen die
+        // freigegebenen Meals aller Homes - dort waere homeId sinnlos
+        if (isRecipes) params.set("homeId", String(homeId));
         selectedTags.forEach((tag) => params.append("tags", tag.name));
 
-        const data = await apiFetch<IMeal[]>(`/api/meals?${params}`, {
+        const path = isRecipes ? "/api/meals" : "/api/meals/public";
+        const data = await apiFetch<IMeal[]>(`${path}?${params}`, {
           method: "GET",
           token,
         });
         setMeals(data);
       } catch (err) {
-        console.log("err", err);
-
         const message =
           err instanceof Error ? err.message : "Error while loading meals";
         setSnackbar({
@@ -77,13 +77,43 @@ function Meals() {
       }
     }
     loadMeals();
-  }, [token, activeHome, selectedTags]);
+  }, [token, activeHome, selectedTags, activeTab]);
 
   function switchActiveTab(tab: Tab) {
     setActiveTab(tab);
   }
 
-  function togglePublic(meal: IMeal) {}
+  async function togglePublic(meal: IMeal) {
+    setLoading(true);
+    try {
+      const updated = await apiFetch<IMeal>(`/api/meals/${meal.id}/public`, {
+        method: "PATCH",
+        body: JSON.stringify({ public: !meal.public }),
+        token,
+      });
+      setMeals((prev) => prev.map((m) => (m.id === meal.id ? updated : m)));
+      // Das Popup haelt eine eigene Kopie des Meals - ohne das hier zeigt es
+      // weiter das alte Icon, obwohl die Liste schon aktuell ist
+      setMealPopup((prev) =>
+        prev.meal?.id === meal.id ? { ...prev, meal: updated } : prev,
+      );
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: updated.public ? "Meal is now public" : "Meal is now private",
+        color: "#16a34a",
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not change visibility";
+      setSnackbar({
+        id: ++snackbarId.current,
+        text: message,
+        color: "#dc2626",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function addToList(meal: IMeal, portions: number) {
     if (!activeHome) {
@@ -247,7 +277,7 @@ function Meals() {
           updateSelectedTags={setSelectedTags}
         />
         <div className="list">
-          {list.map((meal) => (
+          {meals.map((meal) => (
             <MealCard meal={meal} key={meal.id} openPopup={openPopup} />
           ))}
         </div>
