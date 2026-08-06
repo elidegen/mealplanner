@@ -7,7 +7,7 @@ import IconBurger from "../../assets/img/icon_burger.svg?react";
 import IconGear from "../../assets/img/icon_gear.svg?react";
 import IconHouse from "../../assets/img/icon_house.svg?react";
 import IconUsers from "../../assets/img/icon_users.svg?react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { matchPath, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { useHome } from "../../home/HomeContext";
 
@@ -17,6 +17,7 @@ type PageInfo = { title: string; Icon: React.FC };
 const PAGES: Record<string, PageInfo> = {
   "/": { title: "Add Meal", Icon: IconChefHat },
   "/add-meal": { title: "Add Meal", Icon: IconChefHat },
+  "/add-meal/:id": { title: "Add Meal", Icon: IconChefHat },
   "/meals": { title: "Meals", Icon: IconBurger },
   "/lists": { title: "Lists", Icon: IconList },
   "/calendar": { title: "Calendar", Icon: IconCalendar },
@@ -39,7 +40,9 @@ function Header() {
     return null;
   }
 
-  const page = PAGES[location.pathname];
+  const page = Object.entries(PAGES).find(([pattern]) =>
+    matchPath(pattern, location.pathname),
+  )?.[1];
 
   function handleLogout() {
     logout();

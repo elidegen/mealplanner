@@ -2,11 +2,16 @@ import IconListAdd from "../../assets/img/icon_list_add.svg?react";
 import IconTrash from "../../assets/img/icon_trash.svg?react";
 import IconClose from "../../assets/img/icon_close.svg?react";
 import IconCookpot from "../../assets/img/icon_cookpot.svg?react";
+import IconPublic from "../../assets/img/icon_public.svg?react";
+import IconPublicOff from "../../assets/img/icon_public_off.svg?react";
+import IconEdit from "../../assets/img/icon_edit.svg?react";
 import TagList from "../tag-list/TagList";
 import "./MealCardPopup.css";
 import IngredientList from "../ingredient-list/IngredientList";
 import MacroDisplay from "../macro-display/MacroDisplay";
 import type { IMeal } from "../../types/MealTypes";
+import { Link } from "react-router-dom";
+import { useHome } from "../../home/HomeContext";
 
 type Props = {
   mealPopup: { visible: boolean; meal: IMeal | null };
@@ -15,11 +20,13 @@ type Props = {
     openAddToListDialog: (meal: IMeal) => void;
     deleteMeal: (meal: IMeal) => void;
     openCookDialog: (meal: IMeal) => void;
+    togglePublic: (meal: IMeal) => void;
   };
 };
 
 function MealCardPopup({ mealPopup, functions }: Props) {
-  if (!mealPopup.visible) return null;
+  const { activeHome } = useHome();
+  if (!activeHome || !mealPopup.visible) return null;
 
   const meal = mealPopup.meal!;
 
@@ -71,6 +78,18 @@ function MealCardPopup({ mealPopup, functions }: Props) {
             onClick={() => functions.openCookDialog(meal)}
           >
             <IconCookpot />
+          </button>
+          <Link to={`/add-meal/${meal.id}`}>
+            <button className="nav-button" type="button">
+              <IconEdit />
+            </button>
+          </Link>
+          <button
+            className="nav-button"
+            type="button"
+            onClick={() => functions.togglePublic(meal)}
+          >
+            {meal.public ? <IconPublicOff /> : <IconPublic />}
           </button>
           <button
             className="nav-button"

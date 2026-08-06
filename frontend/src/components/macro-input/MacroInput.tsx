@@ -1,22 +1,21 @@
-import { useState } from "react";
 import type { IMacros } from "../../types/MealTypes";
 import IconCalc from "../../assets/img/icon_calculate.svg?react";
 import "./MacroInput.css";
 
 type Props = {
   addMacros: (macros: IMacros) => void;
+  macros: IMacros | null;
 };
 
-function MacroInput({ addMacros }: Props) {
-  const [proteins, setProteins] = useState<number | null>(null);
-  const [carbs, setCarbs] = useState<number | null>(null);
-  const [fat, setFat] = useState<number | null>(null);
-  const [calories, setCalories] = useState<number | null>(null);
+function MacroInput({ macros, addMacros }: Props) {
+  const { proteins, carbs, fat, calories } = macros ?? {
+    proteins: null,
+    carbs: null,
+    fat: null,
+    calories: null,
+  };
 
-  // Der frisch geaenderte Wert muss explizit uebergeben werden: die State-
-  // Variablen hier stammen aus dem laufenden Render und kennen das gerade
-  // geplante set...() noch nicht
-  function updateMacros(next: Partial<IMacros>) {
+  function update(next: Partial<IMacros>) {
     addMacros({ proteins, carbs, fat, calories, ...next });
   }
 
@@ -27,32 +26,23 @@ function MacroInput({ addMacros }: Props) {
 
   function calcCalories() {
     const calculated = (proteins ?? 0) * 4 + (carbs ?? 0) * 4 + (fat ?? 0) * 9;
-    setCalories(calculated);
-    updateMacros({ calories: calculated });
+    update({ calories: toValue(calculated) });
   }
 
   function updateCarbs(c: number) {
-    const value = toValue(c);
-    setCarbs(value);
-    updateMacros({ carbs: value });
+    update({ carbs: toValue(c) });
   }
 
   function updateProteins(p: number) {
-    const value = toValue(p);
-    setProteins(value);
-    updateMacros({ proteins: value });
+    update({ carbs: toValue(p) });
   }
 
   function updateFat(f: number) {
-    const value = toValue(f);
-    setFat(value);
-    updateMacros({ fat: value });
+    update({ carbs: toValue(f) });
   }
 
   function updateCalories(c: number) {
-    const value = toValue(c);
-    setCalories(value);
-    updateMacros({ calories: value });
+    update({ carbs: toValue(c) });
   }
 
   return (

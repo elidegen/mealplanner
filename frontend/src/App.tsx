@@ -32,6 +32,7 @@ function AppContent() {
         <Route path="/home" element={<Home />} />
         <Route path="/" element={<AddMeal />} />
         <Route path="/add-meal" element={<AddMeal />} />
+        <Route path="/add-meal/:id" element={<AddMeal />} />
         <Route path="/lists" element={<Lists />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/users" element={<Users />} />

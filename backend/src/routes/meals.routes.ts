@@ -4,7 +4,8 @@ import { prisma } from "../lib/prisma";
 import { requireAuth, type AuthRequest } from "../middleware/auth";
 import { isMember, canEdit } from "../services/permissions";
 import { ingredientKey, mergeIngredients } from "../services/ingredients";
-import { IMacros } from "../types";
+import { IMacros, ITag } from "../types";
+import { Ingredient } from "@prisma/client";
 
 export const mealsRouter = Router();
 
@@ -35,6 +36,28 @@ mealsRouter.get("/", requireAuth, async (req: AuthRequest, res: Response) => {
   });
   res.json(meals);
 });
+
+mealsRouter.get(
+  "/:id",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    const id = Number(req.params.id);
+    const homeId = Number(req.query.homeId);
+    if (!id || !homeId)
+      return res.status(400).json({ error: "Id and homeId are required" });
+    if (!(await isMember(req.authData!.userId, homeId))) {
+      return res.status(403).json({ error: "No access to this home" });
+    }
+    // Meal aus einem fremden Home wird wie "nicht vorhanden" behandelt,
+    // sonst verraet die Antwort, welche IDs es gibt
+    const meal = await prisma.meal.findUnique({
+      where: { id, homeId },
+      include: { ingredients: true, macros: true, tags: true },
+    });
+    if (!meal) return res.status(404).json({ error: "Meal not found!" });
+    res.json(meal);
+  },
+);
 
 mealsRouter.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
   const { name, macros, ingredients, tags, instructions, portions, homeId } =
@@ -180,9 +203,7 @@ mealsRouter.post(
     if (!id) return res.status(400).json({ error: "id is required" });
     if (!homeId) return res.status(400).json({ error: "homeId is required" });
     if (!portions || portions <= 0) {
-      return res
-        .status(400)
-        .json({ error: "portions must be greater than 0" });
+      return res.status(400).json({ error: "portions must be greater than 0" });
     }
     if (!(await canEdit(req.authData!.userId, homeId))) {
       return res.status(403).json({ error: "No permission to edit" });
@@ -255,5 +276,79 @@ mealsRouter.post(
     });
 
     res.json({ portions, consumed });
+  },
+);
+
+mealsRouter.put(
+  "/:id",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ error: "Id is invalid" });
+    const meal = await prisma.meal.findUnique({ where: { id } });
+    if (!meal) return res.status(404).json({ error: "Meal not found" });
+    if (!meal.homeId || !(await canEdit(req.authData!.userId, meal.homeId))) {
+      return res.status(403).json({ error: "No permission to edit" });
+    }
+    const homeId = meal.homeId;
+    const {
+      name,
+      ingredients,
+      tags,
+      macros,
+      public: isPublic,
+      portions,
+      instructions,
+    } = req.body as {
+      name?: string;
+      ingredients?: { name: string; unit: string; amount: number }[];
+      tags: { name: string }[];
+      macros: {
+        calories: number | null;
+        proteins: number | null;
+        carbs: number | null;
+        fat: number | null;
+      };
+      public: boolean;
+      portions: number;
+      instructions: string;
+    };
+    if (!name || !ingredients || !portions) {
+      return res.status(400).json({ error: "Cannot edit, invalid meal" });
+    }
+
+    try {
+      const updatedMeal = await prisma.meal.update({
+        where: { id },
+        data: {
+          name,
+          macros: macros
+            ? { upsert: { create: macros, update: macros } }
+            : undefined,
+          ingredients: {
+            deleteMany: {},
+            create: mergeIngredients(ingredients).map((ingredient) => ({
+              ...ingredient,
+              homeId,
+            })),
+          },
+          tags: {
+            set: [],
+            connectOrCreate: tags?.map((tag) => ({
+              where: { name_homeId: { name: tag.name, homeId } },
+              create: { name: tag.name, homeId },
+            })),
+          },
+          instructions,
+          portions,
+          public: isPublic,
+        },
+        include: { ingredients: true, macros: true, tags: true },
+      });
+      res.status(200).json(updatedMeal);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      res.status(400).json({ error: message });
+    }
   },
 );
