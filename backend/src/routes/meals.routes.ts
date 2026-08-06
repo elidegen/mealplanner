@@ -9,6 +9,16 @@ import { Ingredient } from "@prisma/client";
 
 export const mealsRouter = Router();
 
+// ?tags=vegan&tags=schnell - Express liefert bei einem Wert einen String,
+// bei mehreren ein Array, ohne Parameter undefined
+function parseTagNames(rawTags: unknown) {
+  return (
+    rawTags === undefined ? [] : Array.isArray(rawTags) ? rawTags : [rawTags]
+  )
+    .map((tag) => String(tag).trim())
+    .filter((tag) => tag !== "");
+}
+
 mealsRouter.get("/", requireAuth, async (req: AuthRequest, res: Response) => {
   const homeId = Number(req.query.homeId);
   if (!homeId) return res.status(400).json({ error: "homeId is required" });
@@ -16,14 +26,7 @@ mealsRouter.get("/", requireAuth, async (req: AuthRequest, res: Response) => {
     return res.status(403).json({ error: "No access to this home" });
   }
 
-  // ?tags=vegan&tags=schnell - Express liefert bei einem Wert einen String,
-  // bei mehreren ein Array, ohne Parameter undefined
-  const rawTags = req.query.tags;
-  const tagNames = (
-    rawTags === undefined ? [] : Array.isArray(rawTags) ? rawTags : [rawTags]
-  )
-    .map((tag) => String(tag).trim())
-    .filter((tag) => tag !== "");
+  const tagNames = parseTagNames(req.query.tags);
 
   const meals = await prisma.meal.findMany({
     where: {
@@ -36,6 +39,27 @@ mealsRouter.get("/", requireAuth, async (req: AuthRequest, res: Response) => {
   });
   res.json(meals);
 });
+
+// Freigegebene Meals aus allen Homes fuer den Meal Browser. Ohne Home-Bezug,
+// deshalb muss die Route vor "/:id" stehen - sonst landet "public" dort als id.
+mealsRouter.get(
+  "/public",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    const tagNames = parseTagNames(req.query.tags);
+
+    const meals = await prisma.meal.findMany({
+      where: {
+        public: true,
+        // Jedes Home hat eigene Tag-Zeilen, ueber Homes hinweg zaehlt
+        // deshalb nur der Name
+        AND: tagNames.map((name) => ({ tags: { some: { name } } })),
+      },
+      include: { ingredients: true, macros: true, tags: true },
+    });
+    res.json(meals);
+  },
+);
 
 mealsRouter.get(
   "/:id",
@@ -129,6 +153,17 @@ mealsRouter.delete(
 
 const PANTRY_LIST = "pantry";
 
+// Kochen und Portionen rechnen geht mit eigenen Meals und mit freigegebenen
+// Meals aus dem Meal Browser. Nicht erlaubt bleibt genau ein Fall: ein privates
+// Meal eines fremden Homes. Ohne die Pruefung liesse sich ueber eine geratene
+// id die komplette Zutatenliste jedes fremden Rezepts auslesen.
+function isCookable(
+  meal: { homeId: number | null; public: boolean },
+  homeId: number,
+) {
+  return meal.homeId === homeId || meal.public;
+}
+
 // Wie viele Portionen des Meals der Vorrat hergibt.
 // Die Zutatenmengen gelten fuer meal.portions Portionen, deshalb wird erst
 // ausgerechnet, wie oft das Rezept komplett reicht, und das dann hochskaliert.
@@ -145,12 +180,12 @@ mealsRouter.get(
     }
 
     const meal = await prisma.meal.findUnique({
-      where: { id, homeId },
+      where: { id },
       include: { ingredients: true },
     });
-    // Meal aus einem fremden Home wird wie "nicht vorhanden" behandelt,
+    // Ein nicht erreichbares Meal wird wie "nicht vorhanden" behandelt,
     // sonst verraet die Antwort, welche IDs es gibt
-    if (!meal) {
+    if (!meal || !isCookable(meal, homeId)) {
       return res.status(404).json({ error: "Meal not found" });
     }
 
@@ -210,10 +245,12 @@ mealsRouter.post(
     }
 
     const meal = await prisma.meal.findUnique({
-      where: { id, homeId },
+      where: { id },
       include: { ingredients: true },
     });
-    if (!meal) return res.status(404).json({ error: "Meal not found" });
+    if (!meal || !isCookable(meal, homeId)) {
+      return res.status(404).json({ error: "Meal not found" });
+    }
 
     // Die Rezeptmengen gelten fuer meal.portions, deshalb auf die
     // gewuenschte Portionszahl hochrechnen
@@ -276,6 +313,35 @@ mealsRouter.post(
     });
 
     res.json({ portions, consumed });
+  },
+);
+
+// Nur die Freigabe umschalten. Ueber PUT /:id ginge das auch, wuerde dort
+// aber saemtliche Zutaten loeschen und neu anlegen, nur um ein Boolean zu kippen
+mealsRouter.patch(
+  "/:id/public",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ error: "Id is invalid" });
+
+    const { public: isPublic } = req.body as { public?: boolean };
+    if (typeof isPublic !== "boolean") {
+      return res.status(400).json({ error: "public must be a boolean" });
+    }
+
+    const meal = await prisma.meal.findUnique({ where: { id } });
+    if (!meal) return res.status(404).json({ error: "Meal not found" });
+    if (!meal.homeId || !(await canEdit(req.authData!.userId, meal.homeId))) {
+      return res.status(403).json({ error: "No permission to edit" });
+    }
+
+    const updatedMeal = await prisma.meal.update({
+      where: { id },
+      data: { public: isPublic },
+      include: { ingredients: true, macros: true, tags: true },
+    });
+    res.json(updatedMeal);
   },
 );
 

@@ -29,6 +29,10 @@ function MealCardPopup({ mealPopup, functions }: Props) {
   if (!activeHome || !mealPopup.visible) return null;
 
   const meal = mealPopup.meal!;
+  // Im Meal Browser stehen Meals fremder Homes die darf man ansehen, kochen und auf
+  // die Einkaufsliste setzen, aber nicht bearbeiten, loeschen oder freigeben.
+  // Das Backend lehnt das ohnehin mit 403 ab, der Button gehoert also weg
+  const isOwnMeal = meal.homeId === activeHome.id;
 
   const macrosAvailable = () => {
     return !!(
@@ -79,25 +83,29 @@ function MealCardPopup({ mealPopup, functions }: Props) {
           >
             <IconCookpot />
           </button>
-          <Link to={`/add-meal/${meal.id}`}>
-            <button className="nav-button" type="button">
-              <IconEdit />
-            </button>
-          </Link>
-          <button
-            className="nav-button"
-            type="button"
-            onClick={() => functions.togglePublic(meal)}
-          >
-            {meal.public ? <IconPublicOff /> : <IconPublic />}
-          </button>
-          <button
-            className="nav-button"
-            type="button"
-            onClick={() => functions.deleteMeal(meal)}
-          >
-            <IconTrash />
-          </button>
+          {isOwnMeal && (
+            <>
+              <Link to={`/add-meal/${meal.id}`}>
+                <button className="nav-button" type="button">
+                  <IconEdit />
+                </button>
+              </Link>
+              <button
+                className="nav-button"
+                type="button"
+                onClick={() => functions.togglePublic(meal)}
+              >
+                {meal.public ? <IconPublicOff /> : <IconPublic />}
+              </button>
+              <button
+                className="nav-button"
+                type="button"
+                onClick={() => functions.deleteMeal(meal)}
+              >
+                <IconTrash />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
