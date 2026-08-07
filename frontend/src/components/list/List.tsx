@@ -5,9 +5,10 @@ import "./List.css";
 type Props = {
   li: IListItem[];
   propagateChecked: (item: IListItem) => void;
+  propagateDelete: (item: IListItem) => void;
 };
 
-function List({ li, propagateChecked }: Props) {
+function List({ li, propagateChecked, propagateDelete }: Props) {
   return (
     <ul>
       {li.map((item) => (
@@ -15,6 +16,7 @@ function List({ li, propagateChecked }: Props) {
           key={item.id}
           item={item}
           propagateChecked={propagateChecked}
+          propagateDelete={propagateDelete}
         ></ListItem>
       ))}
     </ul>

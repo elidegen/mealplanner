@@ -34,15 +34,15 @@ function MacroInput({ macros, addMacros }: Props) {
   }
 
   function updateProteins(p: number) {
-    update({ carbs: toValue(p) });
+    update({ proteins: toValue(p) });
   }
 
   function updateFat(f: number) {
-    update({ carbs: toValue(f) });
+    update({ fat: toValue(f) });
   }
 
   function updateCalories(c: number) {
-    update({ carbs: toValue(c) });
+    update({ calories: toValue(c) });
   }
 
   return (

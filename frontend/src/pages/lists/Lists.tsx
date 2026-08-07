@@ -74,6 +74,16 @@ function Lists() {
     }
   }
 
+  // Wird von zwei Wegen genutzt: Abhaken in der Pantry und manuelles Löschen
+  async function deleteEntry(id: number) {
+    const res = await fetch(`/api/lists/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error();
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+  }
+
   // Abhaken: shopping -> wandert in die Pantry, pantry -> aufgebraucht, wird entfernt
   async function handleCheck(item: IListItem) {
     const id = Number(item.id);
@@ -104,15 +114,20 @@ function Lists() {
             .map((e) => (e.id === saved.id ? saved : e)),
         );
       } else {
-        const res = await fetch(`/api/lists/${id}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error();
-        setEntries((prev) => prev.filter((e) => e.id !== id));
+        await deleteEntry(id);
       }
     } catch {
       setError("Could not save change");
+    }
+  }
+
+  // Eintrag von Hand entfernen, ohne ihn vorher abzuhaken
+  async function handleDelete(item: IListItem) {
+    setError(null);
+    try {
+      await deleteEntry(Number(item.id));
+    } catch {
+      setError("Could not delete item");
     }
   }
 
@@ -139,7 +154,11 @@ function Lists() {
       ) : visible.length === 0 ? (
         <p className="list-hint">This list is empty.</p>
       ) : (
-        <List li={visible} propagateChecked={handleCheck} />
+        <List
+          li={visible}
+          propagateChecked={handleCheck}
+          propagateDelete={handleDelete}
+        />
       )}
       <AddToList addFunction={addToList} />
     </div>
