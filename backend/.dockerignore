@@ -1,0 +1,18 @@
+# Niemals kompilierte Artefakte vom Host ins Image tragen:
+# node_modules enthaelt native Binaries (bcrypt, Prisma Query Engine),
+# die fuer macOS/arm64 gebaut wurden und im Linux-Container nicht laufen.
+node_modules
+
+# Secrets bleiben draussen - Env-Variablen kommen zur Laufzeit rein
+.env
+.env.*
+
+# Lokale Datenbank gehoert nicht ins Image, sondern ins Volume
+prisma/*.db
+prisma/*.db-journal
+prisma/*.db-shm
+prisma/*.db-wal
+prisma/*.backup*
+
+*.log
+.DS_Store

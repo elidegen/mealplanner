@@ -15,7 +15,49 @@ mit persistenter SQLite-Datenbank und JWT-Authentifizierung an.
 
 ---
 
-## Setup
+## Schnellstart mit Docker (empfohlen)
+
+Vorausgesetzt ist nur ein laufendes Docker mit Compose (z. B. Docker Desktop).
+Es muss **nichts** vorbereitet, installiert oder konfiguriert werden:
+
+```bash
+git clone https://github.com/elidegen/mealplanner.git
+cd mealplanner
+docker compose up
+```
+
+Die App läuft danach auf **http://localhost:5173**.
+
+Der erste Start dauert einige Minuten, weil die Images gebaut werden; danach
+geht es in Sekunden. Datenbankschema und Migrationen werden beim Start
+automatisch angewendet.
+
+| Befehl | Wirkung |
+| --- | --- |
+| `docker compose up` | Startet Frontend und Backend, Logs im Vordergrund |
+| `docker compose up -d` | Startet im Hintergrund |
+| `docker compose up --build` | Erzwingt einen Neubau der Images (nach Code-Änderungen) |
+| `docker compose down` | Stoppt alles, **Daten bleiben erhalten** |
+| `docker compose down -v` | Stoppt alles und **löscht die Datenbank** |
+| `docker compose logs -f backend` | Backend-Logs verfolgen |
+
+Aufbau: Der `frontend`-Container liefert den Produktions-Build über nginx aus und
+leitet alle Anfragen unter `/api` an den `backend`-Container weiter. Dadurch
+laufen App und API unter derselben Herkunft. Nach außen ist nur Port 5173 offen.
+Die SQLite-Datei liegt in einem Docker-Volume und überlebt einen Neustart.
+
+`JWT_SECRET` hat für die lokale Entwicklung einen Standardwert, damit der Start
+ohne Vorbereitung funktioniert. Für ein echtes Deployment vor dem Start setzen:
+
+```bash
+JWT_SECRET="ein-eigener-schluessel-mit-mindestens-32-zeichen" docker compose up
+```
+
+---
+
+## Setup ohne Docker
+
+Für die Entwicklung mit Hot Reload. Benötigt Node.js 24 oder neuer.
 
 ### 1. Backend
 
@@ -23,13 +65,10 @@ mit persistenter SQLite-Datenbank und JWT-Authentifizierung an.
 cd backend
 npm install
 
-# .env anlegen (Beispiel):
-#   DATABASE_URL="file:./dev.db"
-#   JWT_SECRET="ein-geheimer-schluessel-mindestens-32-zeichen"
-#   PORT=3000
+cp .env.example .env     # Vorlage kopieren, JWT_SECRET anpassen
 
 npm run db:generate      # Prisma Client generieren
-npm run db:push          # Schema in SQLite anlegen
+npm run db:migrate       # Schema in SQLite anlegen
 npm run dev              # API auf http://localhost:3000
 ```
 

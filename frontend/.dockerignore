@@ -1,0 +1,13 @@
+# node_modules kommen vom Mac (arm64) und gehoeren nicht ins Linux-Image.
+# Der Build-Stage installiert sie selbst per npm ci.
+node_modules
+
+# dist wird im Container frisch gebaut - ein lokaler Stand waere veraltet
+dist
+
+.env
+.env.*
+
+*.log
+.DS_Store
+*.tsbuildinfo
