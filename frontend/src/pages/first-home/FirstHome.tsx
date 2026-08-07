@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useHome } from "../../home/HomeContext";
 import TextButton from "../../components/text-button/TextButton";
+import { onEnter } from "../../helper/form.helper";
 import "../login/Login.css";
 
 function FirstHome() {
@@ -12,6 +13,7 @@ function FirstHome() {
   const { createHome, joinHome } = useHome();
 
   async function handleCreate() {
+    if (loading) return;
     if (name.trim() === "") { setError("Please enter a name"); return; }
     setLoading(true);
     try {
@@ -24,6 +26,7 @@ function FirstHome() {
   }
 
   async function handleJoin() {
+    if (loading) return;
     if (joinCode.trim() === "") {
       setError("Please enter an invite code");
       return;
@@ -48,6 +51,7 @@ function FirstHome() {
             placeholder="Home name (e.g. Flat Konstanz)"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onKeyDown={onEnter(handleCreate)}
           />
         ) : (
           <input
@@ -55,6 +59,7 @@ function FirstHome() {
             placeholder="Invite code"
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+            onKeyDown={onEnter(handleJoin)}
           />
         )}
         {error && <p className="error">{error}</p>}

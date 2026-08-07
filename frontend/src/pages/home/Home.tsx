@@ -3,6 +3,7 @@ import "./Home.css";
 import { useHome } from "../../home/HomeContext";
 import TextButton from "../../components/text-button/TextButton";
 import Dropdown from "../../components/dropdown/Dropdown";
+import { onEnter } from "../../helper/form.helper";
 
 function Home() {
   const { homes, activeHome, setActiveHome, createHome, joinHome } = useHome();
@@ -14,6 +15,7 @@ function Home() {
   const [joining, setJoining] = useState(false);
 
   async function handleCreate() {
+    if (loading) return;
     if (name.trim() === "") {
       setError("Please enter a name");
       return;
@@ -31,6 +33,7 @@ function Home() {
   }
 
   async function handleJoin() {
+    if (joining) return;
     if (joinCode.trim() === "") {
       setJoinError("Please enter an invite code");
       return;
@@ -49,7 +52,9 @@ function Home() {
 
   return (
     <div className="home-page">
-      <form>
+      {/* Kein natives Absenden: die Felder werden einzeln per Button bzw.
+          Enter bestaetigt, ein Submit wuerde die Seite neu laden */}
+      <form onSubmit={(e) => e.preventDefault()}>
         {/* <div className="input-wrapper">
           <label htmlFor="homes">Select your home</label>
           <select
@@ -92,6 +97,7 @@ function Home() {
             placeholder="Home name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onKeyDown={onEnter(handleCreate)}
           />
           {error && <p className="form-error">{error}</p>}
           <TextButton
@@ -109,6 +115,7 @@ function Home() {
             placeholder="Invite code"
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+            onKeyDown={onEnter(handleJoin)}
           />
           {joinError && <p className="form-error">{joinError}</p>}
           <TextButton text="Join" onClicked={handleJoin} disabled={joining} />

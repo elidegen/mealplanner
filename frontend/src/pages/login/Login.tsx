@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import TextButton from "../../components/text-button/TextButton";
 import { useAuth } from "../../auth/AuthContext";
+import { onEnter } from "../../helper/form.helper";
 import "./Login.css";
 
 function Login() {
@@ -14,6 +15,8 @@ function Login() {
   const navigate = useNavigate();
 
   async function handleLogin() {
+    // Der Button ist waehrend des Ladens deaktiviert, Enter nicht - deshalb hier
+    if (loading) return;
     setError(null);
     if (!email.includes("@") || !email.includes(".")) {
       setError("Please enter a valid email address");
@@ -43,12 +46,14 @@ function Login() {
           placeholder="E-Mail"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={onEnter(handleLogin)}
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={onEnter(handleLogin)}
         />
         {error && <p className="error">{error}</p>}
         {loading && <p>Loading…</p>}

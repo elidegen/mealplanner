@@ -9,6 +9,9 @@ type Props = {
 function TextButton({ text, onClicked, disabled, selected }: Props) {
   return (
     <button
+      // Ohne type waere der Button in einem <form> automatisch ein
+      // Submit-Button und wuerde bei Enter die Seite neu laden
+      type="button"
       className={`t-button ${selected ? "selected" : ""}`}
       onClick={onClicked}
       disabled={disabled}

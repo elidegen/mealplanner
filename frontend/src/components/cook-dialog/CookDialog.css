@@ -5,11 +5,11 @@
   flex-direction: column;
   gap: var(--small-gap);
 
+  /* Aussehen kommt von .nav-button, hier nur die Platzierung */
   .close-button {
     position: absolute;
     top: 0px;
     right: 0px;
-    padding: 0;
   }
 
   .popup-text {

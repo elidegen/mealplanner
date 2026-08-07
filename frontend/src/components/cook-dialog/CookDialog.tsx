@@ -4,6 +4,7 @@ import IconCookpot from "../../assets/img/icon_cookpot.svg?react";
 import { useEffect, useRef, useState } from "react";
 import LoadingSpinner from "../loading-spinner/LoadingSpinner";
 import { apiFetch } from "../../auth/api";
+import { onEnter } from "../../helper/form.helper";
 import { useAuth } from "../../auth/AuthContext";
 import Snackbar from "../snackbar/Snackbar";
 import "./CookDialog.css";
@@ -69,9 +70,12 @@ function CookDialog({ vars, functions }: Props) {
   }, [token, activeHome, vars.mealToCook]);
 
   function getAmountText() {
-    if (calcAmount)
-      return `Your pantry allows for up to ${calcAmount} portions`;
-    else return "Could not calculate portions...";
+    // 0 ist ein gueltiges Ergebnis - nur undefined heisst, dass die Abfrage
+    // fehlgeschlagen ist. Ein blosses if (calcAmount) wuerde beides vermischen.
+    if (calcAmount === undefined) return "Could not calculate portions...";
+    return `Your pantry allows for up to ${calcAmount} ${
+      calcAmount === 1 ? "portion" : "portions"
+    }`;
   }
 
   function handleCook() {
@@ -101,7 +105,7 @@ function CookDialog({ vars, functions }: Props) {
           {!isLoading && (
             <div className="dialog-content">
               <button
-                className="close-button"
+                className="close-button nav-button"
                 type="button"
                 onClick={() => functions.closeCookDialog()}
               >
@@ -121,6 +125,7 @@ function CookDialog({ vars, functions }: Props) {
                   className="form-control"
                   value={amount}
                   onChange={(e) => handleAmountInput(e.target.valueAsNumber)}
+                  onKeyDown={onEnter(handleCook)}
                 />
                 <button
                   className="cook-button icon-button"

@@ -49,7 +49,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
   // Bewusst nur die userId im Token: Das aktive Home wechselt zur Laufzeit,
   // ein Token müsste sonst bei jedem Home-Wechsel neu ausgestellt werden.
   const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
-    expiresIn: "1h",
+    expiresIn: "24h",
   });
 
   res.json({
