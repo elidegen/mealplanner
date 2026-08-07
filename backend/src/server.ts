@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(helmet());
 app.use(express.json());
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({ origin: process.env.CORS_ORIGIN || "http://localhost:5173" }));
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
