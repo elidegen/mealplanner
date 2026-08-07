@@ -1,17 +1,30 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import "./Dropdown.css";
-import type { IHome } from "../../types/HomeTypes";
 import IconDropdownArrow from "../../assets/img/icon_dropdown_arrow.svg?react";
 
-type Props = {
-  homes: IHome[];
-  activeHome: IHome | null;
-  setActiveHome: (home: IHome) => void;
-  labelText: string;
+// Generisch, damit die Komponente nicht nur Homes anzeigen kann: der Aufrufer
+// sagt ueber getLabel/getKey, wie ein Eintrag dargestellt und identifiziert wird.
+type Props<T> = {
+  items: T[];
+  selected: T | null;
+  onSelect: (item: T) => void;
+  getLabel: (item: T) => string;
+  getKey: (item: T) => string | number;
+  labelText?: string;
 };
 
-function Dropdown({ homes, activeHome, setActiveHome, labelText }: Props) {
+function Dropdown<T>({
+  items,
+  selected,
+  onSelect,
+  getLabel,
+  getKey,
+  labelText,
+}: Props<T>) {
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+  // Eigene id pro Instanz: das Dropdown steht z. B. in der Nutzerliste
+  // mehrfach auf einer Seite, eine feste id waere dort doppelt vergeben.
+  const boxId = useId();
 
   function getDropdownBoxClass() {
     return dropdownOpen
@@ -21,22 +34,22 @@ function Dropdown({ homes, activeHome, setActiveHome, labelText }: Props) {
 
   return (
     <div className="dropdown-wrapper">
-      <label htmlFor="dropdown-box">{labelText}</label>
+      {labelText && <label htmlFor={boxId}>{labelText}</label>}
       <div
-        className="form-control"
-        id="dropdown-box"
+        className="form-control dropdown-box"
+        id={boxId}
         onClick={() => setDropdownOpen(!dropdownOpen)}
       >
-        <p>{activeHome?.name}</p>
+        <p>{selected !== null ? getLabel(selected) : ""}</p>
         <IconDropdownArrow />
         <div className={getDropdownBoxClass()}>
-          {homes.map((home) => (
+          {items.map((item) => (
             <div
               className="dropdown-option"
-              key={home.id}
-              onClick={() => setActiveHome(home)}
+              key={getKey(item)}
+              onClick={() => onSelect(item)}
             >
-              <p>{home.name}</p>
+              <p>{getLabel(item)}</p>
             </div>
           ))}
         </div>

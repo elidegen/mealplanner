@@ -53,6 +53,9 @@ body {
   justify-content: center;
   width: 32px;
   height: 32px;
+  /* Ohne das quetscht ein enger Flex-Container den Button zusammen,
+     waehrend das SVG darin seine Groesse behaelt und ueberlaeuft. */
+  flex-shrink: 0;
   border-radius: var(--border-radius);
   border: var(--border-controls);
   background-color: var(--color-lightgrey1);
