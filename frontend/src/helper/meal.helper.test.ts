@@ -1,8 +1,10 @@
 import { describe, it, expect } from "vitest";
 import {
   addOrMergeIngredient,
+  addTagIfNew,
   extractAmountUnit,
   ingredientKey,
+  tagKey,
 } from "./meal.helper";
 
 describe("extractAmountUnit", () => {
@@ -85,5 +87,43 @@ describe("addOrMergeIngredient", () => {
     // ingredientKey existiert in Frontend und Backend doppelt, damit das
     // Formular sofort reagiert. Diese Erwartung haelt beide Seiten gleich.
     expect(ingredientKey(" Mehl ", "G")).toBe("mehl|g");
+  });
+});
+
+describe("addTagIfNew", () => {
+  it("haengt einen neuen Tag an und trimmt ihn", () => {
+    expect(addTagIfNew([], { name: " Pasta " })).toEqual([{ name: "Pasta" }]);
+  });
+
+  it("nimmt denselben Tag kein zweites Mal auf", () => {
+    const list = [{ name: "Pasta" }];
+
+    expect(addTagIfNew(list, { name: "Pasta" })).toEqual(list);
+  });
+
+  it("ignoriert Gross-/Kleinschreibung und Leerzeichen", () => {
+    const list = [{ name: "Vegetarisch" }];
+
+    expect(addTagIfNew(list, { name: " vegetarisch " })).toEqual(list);
+  });
+
+  it("behaelt die Schreibweise des ersten Vorkommens", () => {
+    const result = addTagIfNew([{ name: "Vegetarisch" }], {
+      name: "VEGETARISCH",
+    });
+
+    expect(result).toEqual([{ name: "Vegetarisch" }]);
+  });
+
+  it("gibt bei einem Duplikat dieselbe Liste zurueck", () => {
+    // Gleiche Referenz = React rendert nicht unnoetig neu
+    const list = [{ name: "Pasta" }];
+
+    expect(addTagIfNew(list, { name: "pasta" })).toBe(list);
+    expect(addTagIfNew(list, { name: "Neu" })).not.toBe(list);
+  });
+
+  it("normalisiert den Namen wie ingredientKey", () => {
+    expect(tagKey(" Meal Prep ")).toBe("meal prep");
   });
 });

@@ -106,3 +106,10 @@ nav {
     }
   }
 }
+
+.list-hint {
+  padding: 24px 12px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--color-lightgrey2);
+}
