@@ -3,7 +3,8 @@ import type { Response } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, type AuthRequest } from "../middleware/auth";
 import { isMember, canEdit } from "../services/permissions";
-import { ingredientKey, mergeIngredients } from "../services/ingredients";
+import { mergeIngredients } from "../services/ingredients";
+import { availablePortions, planConsumption } from "../services/portions";
 import { IMacros, ITag } from "../types";
 import { Ingredient } from "@prisma/client";
 
@@ -193,34 +194,9 @@ mealsRouter.get(
       where: { homeId, list: PANTRY_LIST },
     });
 
-    // Dieselbe Zutat kann mehrfach im Vorrat liegen (2x "Milch 500 ml"),
-    // deshalb pro Name+Einheit aufsummieren
-    const stock = new Map<string, number>();
-    for (const entry of pantry) {
-      const key = ingredientKey(entry.name, entry.unit);
-      stock.set(key, (stock.get(key) ?? 0) + entry.amount);
-    }
-
-    // Kleinster Faktor gewinnt: die knappste Zutat begrenzt das ganze Rezept
-    let batches = Infinity;
-    for (const ingredient of meal.ingredients) {
-      // Zutaten ohne Menge ("Salz", "etwas Pfeffer") begrenzen nichts
-      if (ingredient.amount <= 0) continue;
-      const available =
-        stock.get(ingredientKey(ingredient.name, ingredient.unit)) ?? 0;
-      batches = Math.min(batches, available / ingredient.amount);
-      if (batches === 0) break;
-    }
-
-    const portionsPerBatch = meal.portions > 0 ? meal.portions : 1;
-    // Float-Division trifft glatte Werte nicht immer exakt (0.3 / 0.1 = 2.9999...),
-    // die Toleranz verhindert, dass floor() eine ganze Portion verschluckt
-    const portions =
-      batches === Infinity
-        ? portionsPerBatch
-        : Math.floor(batches * portionsPerBatch + 1e-9);
-
-    res.json({ portions });
+    res.json({
+      portions: availablePortions(meal.ingredients, pantry, meal.portions),
+    });
   },
 );
 
@@ -264,52 +240,20 @@ mealsRouter.post(
         where: { homeId, list: PANTRY_LIST },
       });
 
-      // Dieselbe Zutat kann auf mehrere Eintraege verteilt sein (2x "Milch 500 ml"),
-      // die muessen zusammen einen Bedarf von 700 ml decken koennen
-      const byKey = new Map<string, typeof pantry>();
-      for (const entry of pantry) {
-        const key = ingredientKey(entry.name, entry.unit);
-        const existing = byKey.get(key);
-        if (existing) existing.push(entry);
-        else byKey.set(key, [entry]);
+      // Erst rechnen, dann schreiben: planConsumption entscheidet ohne
+      // Datenbankzugriff, welche Eintraege reduziert und welche geleert werden
+      const plan = planConsumption(meal.ingredients, pantry, factor);
+
+      for (const id of plan.deletes) {
+        await tx.listEntry.delete({ where: { id } });
       }
-
-      const used: { name: string; amount: number; unit: string }[] = [];
-      for (const ingredient of meal.ingredients) {
-        // Zutaten ohne Menge ("Salz", "etwas Pfeffer") verbrauchen nichts
-        if (ingredient.amount <= 0) continue;
-
-        const required = ingredient.amount * factor;
-        let missing = required;
-        const entries =
-          byKey.get(ingredientKey(ingredient.name, ingredient.unit)) ?? [];
-
-        for (const entry of entries) {
-          // Float-Reste wie 1e-15 gelten als gedeckt
-          if (missing <= 1e-9) break;
-          // Ein Eintrag kann nie mehr hergeben als er hat
-          const take = Math.min(entry.amount, missing);
-          missing -= take;
-
-          const remaining = entry.amount - take;
-          if (remaining <= 1e-9) {
-            await tx.listEntry.delete({ where: { id: entry.id } });
-          } else {
-            await tx.listEntry.update({
-              where: { id: entry.id },
-              data: { amount: remaining },
-            });
-          }
-        }
-
-        used.push({
-          name: ingredient.name,
-          // Was der Vorrat nicht hergab, wurde auch nicht abgezogen
-          amount: required - missing,
-          unit: ingredient.unit,
+      for (const update of plan.updates) {
+        await tx.listEntry.update({
+          where: { id: update.id },
+          data: { amount: update.amount },
         });
       }
-      return used;
+      return plan.consumed;
     });
 
     res.json({ portions, consumed });

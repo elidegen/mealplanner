@@ -42,6 +42,18 @@ npm run dev              # App auf http://localhost:5173
 ```
 
 
+## Tests
+
+```bash
+cd backend && npm test      # Rechteprüfung, Zutaten-Merge, Portionen & Kochen
+cd frontend && npm test     # Mengeneingabe und Zutatenliste im Formular
+```
+
+Getestet wird die Kernlogik als reine Funktionen, ohne laufende Datenbank:
+`services/permissions.ts` (wer darf lesen und schreiben), `services/ingredients.ts`
+(wann zwei Zutaten dieselbe sind), `services/portions.ts` (wie viele Portionen der
+Vorrat hergibt und was das Kochen abzieht) sowie `helper/meal.helper.ts` im Frontend.
+
 ## Kriterien-Zuordnung M3
 
 | Kriterium | Datei | Zeile / Hinweis |
