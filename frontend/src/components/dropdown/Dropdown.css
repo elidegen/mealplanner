@@ -4,11 +4,13 @@
   gap: 5px;
 }
 
-#dropdown-box {
+/* Klasse statt id: die Komponente kann mehrfach auf einer Seite stehen */
+.dropdown-box {
   display: flex;
   align-items: center;
   position: relative;
   justify-content: space-between;
+  cursor: pointer;
 }
 
 .dropdown-content {
@@ -22,6 +24,8 @@
   border-radius: var(--border-radius);
   border: var(--border-controls);
   outline: none;
+  /* Legt sich ueber die nachfolgenden Zeilen einer Liste */
+  z-index: 10;
 }
 
 .expanded {

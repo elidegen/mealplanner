@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import IconArrowUp from "../../assets/img/icon_arrow_up_green.svg?react";
-import IconArrowDown from "../../assets/img/icon_arrow_down_red.svg?react";
 import IconTrash from "../../assets/img/icon_trash.svg?react";
+import Dropdown from "../../components/dropdown/Dropdown";
 import { useAuth } from "../../auth/AuthContext";
 import { useHome } from "../../home/HomeContext";
 import "./Users.css";
@@ -16,7 +15,8 @@ type Member = {
   role: Role;
 };
 
-const ROLE_ORDER: Role[] = ["gast", "user", "admin"];
+// Reihenfolge im Dropdown, absteigend nach Rechten
+const ROLES: Role[] = ["admin", "user", "gast"];
 
 const ROLE_LABEL: Record<Role, string> = {
   admin: "Admin",
@@ -33,6 +33,7 @@ function Users() {
   const [error, setError] = useState<string | null>(null);
 
   const isAdmin = activeHome?.role === "admin";
+  const adminCount = members.filter((m) => m.role === "admin").length;
 
   useEffect(() => {
     if (!activeHome || !token) return;
@@ -50,10 +51,8 @@ function Users() {
       .finally(() => setLoading(false));
   }, [activeHome, token]);
 
-  async function changeRole(member: Member, direction: 1 | -1) {
-    if (!activeHome) return;
-    const next = ROLE_ORDER[ROLE_ORDER.indexOf(member.role) + direction];
-    if (!next) return;
+  async function changeRole(member: Member, next: Role) {
+    if (!activeHome || next === member.role) return;
     setError(null);
 
     try {
@@ -107,9 +106,7 @@ function Users() {
         navigate("/home");
       }
     } catch (e: unknown) {
-      setError(
-        e instanceof Error ? e.message : "Could not remove member",
-      );
+      setError(e instanceof Error ? e.message : "Could not remove member");
     }
   }
 
@@ -127,8 +124,10 @@ function Users() {
         <div className="users-overview">
           {members.map((member) => {
             const isSelf = member.userId === user?.id;
-            const canPromote = isAdmin && member.role !== "admin";
-            const canDemote = isAdmin && member.role !== "gast";
+            // Der letzte Admin darf nicht degradiert werden - das Backend
+            // lehnt es ab, also gar nicht erst zur Auswahl stellen
+            const isLastAdmin = member.role === "admin" && adminCount === 1;
+            const canChangeRole = isAdmin && !isLastAdmin;
             // Andere entfernen darf nur ein Admin, austreten darf jeder selbst
             const canRemove = isAdmin || isSelf;
 
@@ -142,30 +141,21 @@ function Users() {
                     {member.name}
                     {isSelf && <span className="user-self"> (You)</span>}
                   </h2>
-                  <span className="user-email">{member.email}</span>
                 </div>
-                <span className={`user-role role-${member.role}`}>
-                  {ROLE_LABEL[member.role]}
-                </span>
+                {canChangeRole ? (
+                  <Dropdown
+                    items={ROLES}
+                    selected={member.role}
+                    onSelect={(role) => changeRole(member, role)}
+                    getLabel={(role) => ROLE_LABEL[role]}
+                    getKey={(role) => role}
+                  />
+                ) : (
+                  <span className={`user-role role-${member.role}`}>
+                    {ROLE_LABEL[member.role]}
+                  </span>
+                )}
 
-                {canPromote && (
-                  <button
-                    className="icon-button"
-                    title="Promote"
-                    onClick={() => changeRole(member, 1)}
-                  >
-                    <IconArrowUp />
-                  </button>
-                )}
-                {canDemote && (
-                  <button
-                    className="icon-button"
-                    title="Demote"
-                    onClick={() => changeRole(member, -1)}
-                  >
-                    <IconArrowDown />
-                  </button>
-                )}
                 {canRemove && (
                   <button
                     className="icon-button"
@@ -185,9 +175,6 @@ function Users() {
         <div className="invite-box">
           <span className="invite-label">Invite code</span>
           <p className="invite-code">{activeHome.joinCode}</p>
-          {/*<span className="invite-hint">
-            Anyone entering this code joins as a user.
-          </span>*/}
         </div>
       )}
     </div>

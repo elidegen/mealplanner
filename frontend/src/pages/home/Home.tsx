@@ -68,9 +68,11 @@ function Home() {
           </select>
         </div> */}
         <Dropdown
-          activeHome={activeHome}
-          homes={homes}
-          setActiveHome={setActiveHome}
+          items={homes}
+          selected={activeHome}
+          onSelect={setActiveHome}
+          getLabel={(home) => home.name}
+          getKey={(home) => home.id}
           labelText={"Select your home"}
         />
         {activeHome?.joinCode && (

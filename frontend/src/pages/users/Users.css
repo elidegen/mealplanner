@@ -9,9 +9,11 @@
   flex-direction: column;
 }
 
+/* Feste Spalten statt space-between: so stehen Rolle und Aktion in jeder
+   Zeile an derselben Stelle, egal wie viele Elemente sichtbar sind. */
 .user-box {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 44px 1fr 110px 32px;
   align-items: center;
   padding: var(--medium-gap);
   gap: var(--medium-gap);
@@ -20,7 +22,6 @@
 
 .user-box:hover {
   background-color: var(--color-hover-primary);
-  filter: brightness(0.95);
 }
 
 .user-avatar {
@@ -62,8 +63,9 @@
   white-space: nowrap;
 }
 
+/* Chip behaelt seine natuerliche Breite, statt die Spalte auszufuellen */
 .user-role {
-  flex-shrink: 0;
+  justify-self: start;
   font-size: 12px;
   padding: 3px 10px;
   border-radius: 999px;
@@ -109,10 +111,4 @@
   font-family: monospace;
   font-size: 24px;
   letter-spacing: 5px;
-}
-
-.invite-hint {
-  font-size: 12px;
-  color: var(--color-lightgrey2);
-  text-align: center;
 }
