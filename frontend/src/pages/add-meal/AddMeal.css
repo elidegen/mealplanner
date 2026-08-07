@@ -94,6 +94,7 @@ form {
   box-shadow: var(--box-shadow);
   cursor: pointer;
   width: fit-content;
+  margin-left: auto;
 }
 
 .default-button:hover {

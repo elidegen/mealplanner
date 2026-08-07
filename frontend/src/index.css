@@ -29,6 +29,10 @@
   --header-height: 70px;
   --footer-height: 70px;
   --form-control-height: 44px;
+
+  /* Maximale Inhaltsbreite. 1100px, weil Meals ab 950px Fensterbreite auf
+     drei Spalten schaltet und die sonst zu schmal wuerden. */
+  --content-max-width: 1100px;
 }
 
 * {
