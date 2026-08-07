@@ -31,4 +31,5 @@ EXPOSE 3000
 
 # migrate deploy laeuft beim START, nicht beim Build: beim Build gibt es
 # das Volume noch nicht. "deploy" statt "dev", weil es keine Rueckfragen stellt.
-CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
+# Der Seed prueft selbst, ob die Datenbank leer ist, und bricht sonst ab.
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && npm start"]

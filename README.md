@@ -28,9 +28,31 @@ docker compose up
 
 Die App läuft danach auf **http://localhost:5173**.
 
+### Testzugang
+
+Beim ersten Start wird eine Demo-WG mit Beispieldaten angelegt:
+
+| | E-Mail | Passwort | Rolle |
+| --- | --- | --- | --- |
+| Admin | `test@mealplanner.de` | `test1234` | `admin` |
+| Zweites Mitglied | `mitglied@mealplanner.de` | `test1234` | `user` |
+
+Einladungscode der Demo-WG: **`PLANER`** (unter *Einstellungen* sichtbar, wenn
+man als Admin angemeldet ist).
+
+Die Demo-Daten sind so gewählt, dass die Portionsberechnung sichtbar wird:
+
+| Mahlzeit | Vorrat | Kochbar |
+| --- | --- | --- |
+| Spaghetti Bolognese (4 Portionen) | alle Zutaten doppelt vorhanden | 8 Portionen |
+| Linsen-Curry (3 Portionen) | Kokosmilch nur zur Hälfte da | 1 Portion |
+| Ofengemüse mit Feta (2 Portionen) | Feta fehlt, steht auf der Einkaufsliste | 0 Portionen |
+
 Der erste Start dauert einige Minuten, weil die Images gebaut werden; danach
-geht es in Sekunden. Datenbankschema und Migrationen werden beim Start
-automatisch angewendet.
+geht es in Sekunden. Migrationen und Demo-Daten werden beim Start automatisch
+angewendet. Der Seed bricht ab, sobald die Datenbank bereits Nutzer enthält –
+eigene Änderungen überleben also jeden Neustart. Erst `docker compose down -v`
+setzt alles zurück.
 
 | Befehl | Wirkung |
 | --- | --- |
@@ -69,6 +91,7 @@ cp .env.example .env     # Vorlage kopieren, JWT_SECRET anpassen
 
 npm run db:generate      # Prisma Client generieren
 npm run db:migrate       # Schema in SQLite anlegen
+npm run db:seed          # Demo-Daten und Testuser anlegen
 npm run dev              # API auf http://localhost:3000
 ```
 
