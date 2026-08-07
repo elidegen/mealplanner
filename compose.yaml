@@ -1,0 +1,46 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      # Die SQLite-Datei liegt bewusst NICHT im Code-Verzeichnis, sondern
+      # in /app/data - dort haengt das Volume, ohne prisma/migrations zu ueberdecken.
+      DATABASE_URL: "file:/app/data/dev.db"
+      # Bewusst mit Default, damit "docker compose up" ohne Vorbereitung laeuft.
+      # Fuer ein echtes Deployment: eigene JWT_SECRET-Variable setzen.
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-bitte-fuer-produktion-ersetzen}
+      PORT: "3000"
+      CORS_ORIGIN: "http://localhost:5173"
+    volumes:
+      # Named Volume: ueberlebt "docker compose down", stirbt bei "down -v".
+      - db-data:/app/data
+    # Kein "ports:" - das Backend ist nur containerintern erreichbar.
+    # Von aussen laeuft alles ueber den nginx-Proxy des Frontends.
+    # Zum Debuggen der API direkt: die naechsten zwei Zeilen einkommentieren.
+    # ports:
+    #   - "3001:3000"
+    healthcheck:
+      # slim-Images haben weder curl noch wget - also mit Node pruefen.
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  frontend:
+    build: ./frontend
+    ports:
+      # Host-Port : Container-Port. Links ist, was im Browser steht.
+      - "5173:80"
+    depends_on:
+      backend:
+        # Wartet nicht nur auf "gestartet", sondern auf "antwortet wirklich".
+        condition: service_healthy
+
+volumes:
+  db-data:
