@@ -9,7 +9,12 @@ import Snackbar from "../../components/snackbar/Snackbar";
 import MacroInput from "../../components/macro-input/MacroInput";
 import IngredientInput from "../../components/ingredient-input/IngredientInput";
 import TagInput from "../../components/tag-input/TagInput";
-import { addOrMergeIngredient, ingredientKey } from "../../helper/meal.helper";
+import {
+  addOrMergeIngredient,
+  addTagIfNew,
+  ingredientKey,
+  tagKey,
+} from "../../helper/meal.helper";
 import { useNavigate, useParams } from "react-router-dom";
 
 function AddMeal() {
@@ -98,11 +103,12 @@ function AddMeal() {
   }
 
   function addTag(tag: ITag) {
-    setTags((prev) => [...prev, tag]);
+    setTags((prev) => addTagIfNew(prev, tag));
   }
 
   function removeTag(name: string) {
-    setTags((prev) => prev.filter((ing) => ing.name !== name));
+    const key = tagKey(name);
+    setTags((prev) => prev.filter((item) => tagKey(item.name) !== key));
   }
 
   function addMacros(macros: IMacros) {

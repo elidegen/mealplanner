@@ -277,9 +277,11 @@ function Meals() {
           updateSelectedTags={setSelectedTags}
         />
         <div className="list">
-          {meals.map((meal) => (
-            <MealCard meal={meal} key={meal.id} openPopup={openPopup} />
-          ))}
+          {!meals.length && <p className="list-hint">This list is empty</p>}
+          {meals?.length > 0 &&
+            meals.map((meal) => (
+              <MealCard meal={meal} key={meal.id} openPopup={openPopup} />
+            ))}
         </div>
       </div>
       <LoadingSpinner visible={loading} />
