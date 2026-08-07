@@ -10,6 +10,10 @@ footer {
   background-color: var(--color-primary);
   box-shadow: 0 -2px 12px rgba(26, 111, 212, 0.3);
   z-index: 10;
+  /* Der Balken bleibt ueber die volle Fensterbreite, die Icons richten sich
+     aber an derselben Spalte aus wie der Inhalt darueber. Unterhalb von
+     --content-max-width ergibt max() 0 und es aendert sich nichts. */
+  padding-inline: max(0px, (100% - var(--content-max-width)) / 2);
 }
 
 footer svg {
@@ -33,4 +37,13 @@ footer .nav-button:hover svg {
   border: none;
   cursor: pointer;
   text-decoration: none;
+}
+
+/* Aktiver Tab - die Klasse setzt Footer.tsx ueber NavLink */
+footer .nav-button.active {
+  background-color: var(--color-selected);
+}
+
+footer .nav-button.active svg {
+  fill: var(--color-white);
 }

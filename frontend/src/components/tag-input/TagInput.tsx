@@ -1,6 +1,7 @@
 import type { ITag } from "../../types/MealTypes";
 import TagList from "../tag-list/TagList";
 import IconAdd from "../../assets/img/icon_add.svg?react";
+import { onEnter } from "../../helper/form.helper";
 import { useState } from "react";
 
 type Props = {
@@ -31,6 +32,7 @@ function TagInput({ tags, addTag, removeTag }: Props) {
           placeholder="Enter tag"
           value={currentTag}
           onChange={(e) => setCurrentTag(e.target.value)}
+          onKeyDown={onEnter(handleAddTag)}
         />
         <button className="icon-button" type="button" onClick={handleAddTag}>
           <IconAdd />

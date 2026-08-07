@@ -1,19 +1,27 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Footer from "./components/footer/Footer";
 import Header from "./components/header/Header";
-import AddMeal from "./pages/add-meal/AddMeal";
-import Lists from "./pages/lists/Lists";
-import Settings from "./pages/settings/Settings";
-import Login from "./pages/login/Login";
-import Users from "./pages/users/Users";
-import Home from "./pages/home/Home";
-import Meals from "./pages/meals/Meals";
+import LoadingSpinner from "./components/loading-spinner/LoadingSpinner";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
-import Register from "./pages/register/Register";
 import { useAuth } from "./auth/AuthContext";
 import { useHome } from "./home/HomeContext";
-import FirstHome from "./pages/first-home/FirstHome";
+
+// Jede Seite wird erst geladen, wenn sie zum ersten Mal aufgerufen wird.
+// Vite legt daraus eigene Chunks an, das Start-Bundle enthaelt dann nur noch
+// Grundgeruest, Header und Footer.
+// Header, Footer und LoadingSpinner bleiben bewusst statisch: sie sind auf
+// jeder Seite sichtbar, ein eigener Chunk waere hier nur ein Umweg.
+const AddMeal = lazy(() => import("./pages/add-meal/AddMeal"));
+const Lists = lazy(() => import("./pages/lists/Lists"));
+const Settings = lazy(() => import("./pages/settings/Settings"));
+const Login = lazy(() => import("./pages/login/Login"));
+const Users = lazy(() => import("./pages/users/Users"));
+const Home = lazy(() => import("./pages/home/Home"));
+const Meals = lazy(() => import("./pages/meals/Meals"));
+const Register = lazy(() => import("./pages/register/Register"));
+const FirstHome = lazy(() => import("./pages/first-home/FirstHome"));
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
@@ -48,7 +56,12 @@ function App() {
       <div className="wrapper">
         <Header />
         <main>
-          <AppContent />
+          {/* Umschliesst auch FirstHome, das AppContent ausserhalb von
+              <Routes> zurueckgibt - sonst fehlt dort die Fallback-Anzeige,
+              waehrend der Chunk geladen wird. */}
+          <Suspense fallback={<LoadingSpinner visible={true} />}>
+            <AppContent />
+          </Suspense>
         </main>
         <Footer />
       </div>

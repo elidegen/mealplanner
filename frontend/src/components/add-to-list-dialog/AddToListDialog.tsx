@@ -2,6 +2,7 @@ import type { IMeal } from "../../types/MealTypes";
 import IconClose from "../../assets/img/icon_close.svg?react";
 import IconListAdd from "../../assets/img/icon_list_add.svg?react";
 import { useState } from "react";
+import { onEnter } from "../../helper/form.helper";
 import "./AddToListDialog.css";
 
 type Props = {
@@ -55,7 +56,7 @@ function AddToListDialog({ vars, functions }: Props) {
         <div className="popup" onClick={(e) => e.stopPropagation()}>
           <div className="dialog-content">
             <button
-              className="close-button"
+              className="close-button nav-button"
               type="button"
               onClick={() => functions.closeAddToListDialog()}
             >
@@ -75,6 +76,7 @@ function AddToListDialog({ vars, functions }: Props) {
                 className="form-control"
                 value={amount}
                 onChange={(e) => handleAmountInput(e.target.valueAsNumber)}
+                onKeyDown={onEnter(handleAddToList)}
               />
               <button
                 className="add-button icon-button"

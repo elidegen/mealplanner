@@ -3,6 +3,7 @@ import type { IIngredient } from "../../types/MealTypes";
 import IngredientList from "../ingredient-list/IngredientList";
 import IconAdd from "../../assets/img/icon_add.svg?react";
 import { extractAmountUnit } from "../../helper/meal.helper";
+import { onEnter } from "../../helper/form.helper";
 
 type Props = {
   ingredients: IIngredient[];
@@ -58,6 +59,7 @@ function IngredienInput({
               setCurrentIngredient(e.target.value);
               if (nameError) setNameError(null);
             }}
+            onKeyDown={onEnter(handleAddIngredient)}
           />
         </div>
         <div className="amount-field">
@@ -71,6 +73,7 @@ function IngredienInput({
               setCurrentAmount(e.target.value);
               if (amountError) setAmountError(null);
             }}
+            onKeyDown={onEnter(handleAddIngredient)}
           />
         </div>
         <button

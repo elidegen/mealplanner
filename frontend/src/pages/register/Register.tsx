@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import TextButton from "../../components/text-button/TextButton";
 import { useAuth } from "../../auth/AuthContext";
+import { onEnter } from "../../helper/form.helper";
 import "./Register.css";
 
 function Register() {
@@ -14,6 +15,8 @@ function Register() {
   const navigate = useNavigate();
 
   async function handleRegister() {
+    // Der Button ist waehrend des Ladens deaktiviert, Enter nicht - deshalb hier
+    if (loading) return;
     setError(null);
     if (name.trim() === "") {
         setError("Please enter your name");
@@ -57,18 +60,21 @@ function Register() {
           placeholder="Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onKeyDown={onEnter(handleRegister)}
         />
         <input
           type="email"
           placeholder="E-Mail"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={onEnter(handleRegister)}
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={onEnter(handleRegister)}
         />
         {error && <p className="error">{error}</p>}
         {loading && <p>Loading…</p>}

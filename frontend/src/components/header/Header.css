@@ -28,7 +28,14 @@ h1 {
 .login-button {
   position: absolute;
   top: 50%;
-  right: var(--medium-gap);
+  /* Richtet sich an derselben Spalte aus wie der Inhalt darunter: bei breiten
+     Fenstern rueckt der Button mit nach innen, unterhalb von
+     --content-max-width ergibt max() 0 und es bleibt beim normalen Randabstand.
+     Absolut positionierte Elemente beziehen sich auf die Padding-Box des
+     Headers, ein padding-inline wie beim Footer wuerde hier nicht wirken. */
+  right: calc(
+    max(0px, (100% - var(--content-max-width)) / 2) + var(--medium-gap)
+  );
   transform: translateY(-50%);
   display: flex;
   justify-content: center;
